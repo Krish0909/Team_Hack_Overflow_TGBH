@@ -65,12 +65,6 @@ export default function DashboardLayout({ children }) {
             color: "text-purple-500",
         },
         {
-            title: "Eligibility Check",
-            href: "/dashboard/eligibility",
-            icon: BadgeDollarSign,
-            color: "text-yellow-500",
-        },
-        {
             title: "EMI Analysis",
             href: "/dashboard/emiAnalysis",
             icon: Calculator,
