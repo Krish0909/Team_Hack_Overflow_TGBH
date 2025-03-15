@@ -342,6 +342,83 @@ const HomePage = () => {
                             </p>
                         </div>
                     </div>
+
+                    {/* Awareness Carousel */}
+                    <div className="mt-16 py-12 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-3xl border border-emerald-100 dark:border-emerald-900">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600">
+                                Why Loan Fraud Detection Matters
+                            </h2>
+                            <p className="text-muted-foreground mt-2">
+                                Key statistics that highlight the importance of
+                                staying protected
+                            </p>
+                        </div>
+
+                        <div className="flex overflow-x-auto space-x-6 px-8 scrollbar-hide">
+                            <div className="flex-none w-80 snap-center">
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-emerald-200 dark:border-emerald-800 transform hover:scale-105 transition-transform">
+                                    <div className="text-4xl font-bold text-emerald-600 mb-2">
+                                        ₹7.5B+
+                                    </div>
+                                    <div className="font-semibold mb-2">
+                                        Digital Loan Fraud in 2023
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        In India alone, digital loan frauds
+                                        crossed ₹7.5 billion affecting thousands
+                                        of borrowers
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex-none w-80 snap-center scrollbar-hide">
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-emerald-200 dark:border-emerald-800 transform hover:scale-105 transition-transform">
+                                    <div className="text-4xl font-bold text-emerald-600 mb-2">
+                                        60%
+                                    </div>
+                                    <div className="font-semibold mb-2">
+                                        Rise in Loan Shark Cases
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Significant increase in predatory
+                                        lending cases reported in the last year
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex-none w-80 snap-center">
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-emerald-200 dark:border-emerald-800 transform hover:scale-105 transition-transform">
+                                    <div className="text-4xl font-bold text-emerald-600 mb-2">
+                                        2.8M
+                                    </div>
+                                    <div className="font-semibold mb-2">
+                                        Affected Borrowers
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Number of people affected by fraudulent
+                                        lending practices in 2023
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex-none w-80 snap-center">
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-emerald-200 dark:border-emerald-800 transform hover:scale-105 transition-transform">
+                                    <div className="text-4xl font-bold text-emerald-600 mb-2">
+                                        85%
+                                    </div>
+                                    <div className="font-semibold mb-2">
+                                        Prevention Rate
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Success rate in preventing loan fraud
+                                        with AI detection systems
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="mt-16 space-y-12 animate-fadeInUp">
                         {/* Feature Explanations */}
                         <div className="space-y-24 my-24">

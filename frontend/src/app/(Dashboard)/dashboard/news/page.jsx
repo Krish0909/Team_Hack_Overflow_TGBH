@@ -1,83 +1,96 @@
-import { Suspense } from 'react';
+import { Suspense } from "react";
 import {
-  Clock,
-  Link as LinkIcon,
-  Newspaper,
-  AlertCircle,
-  Search,
+    Clock,
+    Link as LinkIcon,
+    Newspaper,
+    AlertCircle,
+    Search,
 } from "lucide-react";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import {
+    Card,
+    CardHeader,
+    CardContent,
+    CardFooter,
+} from "@/components/ui/card";
 
 const ScrollArea = ({ children, className = "" }) => (
-  <div className={`overflow-auto ${className}`}>{children}</div>
+    <div className={`overflow-auto ${className}`}>{children}</div>
 );
 
 const ErrorMessage = ({ message }) => (
-  <div className="flex items-center gap-2 p-4 text-red-600 bg-red-50 rounded-lg">
-    <AlertCircle className="h-5 w-5" />
-    <p>{message}</p>
-  </div>
+    <div className="flex items-center gap-2 p-4 text-red-600 bg-red-50 rounded-lg">
+        <AlertCircle className="h-5 w-5" />
+        <p>{message}</p>
+    </div>
 );
 
 async function getNews() {
-  const res = await fetch('http://localhost:3000/api/news', { next: { revalidate: 300 } });
-  if (!res.ok) throw new Error('Failed to fetch news');
-  return res.json();
+    const res = await fetch("http://localhost:3000/api/news", {
+        next: { revalidate: 300 },
+    });
+    if (!res.ok) throw new Error("Failed to fetch news");
+    return res.json();
 }
 
 export default async function NewsFeed() {
-  const { news } = await getNews();
+    const { news } = await getNews();
 
-  return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Newspaper className="h-6 w-6 text-gray-700" />
-          <h1 className="text-3xl font-bold text-gray-900">Loan News Feed</h1>
-        </div>
-      </div>
+    return (
+        <div className="container mx-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                    <Newspaper className="h-6 w-6 text-gray-700" />
+                    <h1 className="text-3xl font-bold text-gray-900">
+                        Loan News Feed
+                    </h1>
+                </div>
+            </div>
 
-      <ScrollArea className="h-[800px] rounded-md border border-gray-200 p-4 bg-gray-50">
-        <Suspense fallback={<div>Loading...</div>}>
-          <div className="grid gap-4">
-            {news.map((article, index) => (
-              <Card key={index} className="overflow-hidden">
-                <CardHeader className="p-6">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                        {article.title}
-                      </h2>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Clock className="h-4 w-4" />
-                        {new Date(article.pub_date).toLocaleString()}
-                        <span className="px-2">•</span>
-                        {article.source}
-                      </div>
+            <ScrollArea className="h-[800px] rounded-md border border-gray-200 p-4 bg-gray-50">
+                <Suspense fallback={<div>Loading...</div>}>
+                    <div className="grid gap-4">
+                        {news.map((article, index) => (
+                            <Card key={index} className="overflow-hidden">
+                                <CardHeader className="p-6">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="flex-1">
+                                            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                                                {article.title}
+                                            </h2>
+                                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                <Clock className="h-4 w-4" />
+                                                {new Date(
+                                                    article.pub_date
+                                                ).toLocaleString()}
+                                                <span className="px-2">•</span>
+                                                {article.source}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+
+                                <CardContent className="px-6">
+                                    <p className="text-sm text-gray-600">
+                                        {article.description}
+                                    </p>
+                                </CardContent>
+
+                                <CardFooter className="px-6 py-4">
+                                    <a
+                                        href={article.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                    >
+                                        <LinkIcon className="h-4 w-4" />
+                                        Read full article
+                                    </a>
+                                </CardFooter>
+                            </Card>
+                        ))}
                     </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="px-6">
-                  <p className="text-sm text-gray-600">{article.description}</p>
-                </CardContent>
-
-                <CardFooter className="px-6 py-4">
-                  <a
-                    href={article.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    Read full article
-                  </a>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </Suspense>
-      </ScrollArea>
-    </div>
-  );
+                </Suspense>
+            </ScrollArea>
+        </div>
+    );
 }
