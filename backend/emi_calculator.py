@@ -11,7 +11,8 @@ import markdown
 from weasyprint import HTML, CSS
 import logging
 import matplotlib
-matplotlib.use('Agg')  # Set backend before importing pyplot
+
+matplotlib.use("Agg")  # Set backend before importing pyplot
 
 load_dotenv()
 emi_calculator = Blueprint("emi_calculator", __name__)
