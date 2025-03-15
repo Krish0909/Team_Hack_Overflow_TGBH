@@ -30,14 +30,57 @@ app.register_blueprint(loanbuddy, url_prefix="/chat")
 # Register the EMI calculator blueprint
 app.register_blueprint(emi_calculator, url_prefix="/api/emi")
 
+# Update PROJECT_PATHS with all dashboard features
+PROJECT_PATHS = {
+    'overview': '/dashboard',
+    'loan_buddy': '/dashboard/loanBuddy',
+    'loan_guard': '/dashboard/loangaurd',
+    'eligibility': '/dashboard/eligibility', 
+    'emi_analysis': '/dashboard/emiAnalysis',
+    'news': '/dashboard/news',
+    'settings': '/dashboard/settings'
+}
+
+FEATURE_DESCRIPTIONS = {
+    'overview': {
+        'path': '/dashboard',
+        'description': 'View your loan dashboard and summary'
+    },
+    'loan_buddy': {
+        'path': '/dashboard/loanBuddy',
+        'description': 'Get personalized loan guidance and support'
+    },
+    'loan_guard': {
+        'path': '/dashboard/loangaurd',
+        'description': 'Analyze and verify loan documents'
+    },
+    'eligibility': {
+        'path': '/dashboard/eligibility',
+        'description': 'Check your loan eligibility'
+    },
+    'emi_analysis': {
+        'path': '/dashboard/emiAnalysis',
+        'description': 'Calculate and analyze loan EMIs'
+    },
+    'news': {
+        'path': '/dashboard/news',
+        'description': 'Stay updated with latest financial news'
+    },
+    'settings': {
+        'path': '/dashboard/settings',
+        'description': 'Manage your account settings'
+    }
+}
+
+# Update INTENTS with more specific patterns
 INTENTS = {
-    "loan_check": r"(loan|credit|borrow|finance).*?(eligibility|qualify|check|status)",
-    "apply_loan": r"(apply|get|request|want).*?(loan|credit|mortgage)",
-    "profile_view": r"(show|view|see|open|go).*?(profile|account|my details)",
-    "settings": r"(change|update|modify|settings|preferences)",
-    "dashboard": r"(show|view|go|open).*?(dashboard|home|main)",
-    "chat": r"(talk|speak|chat|discuss|help)",
-    "language": r"(change|switch|select).*?(language|भाषा|ভাষা|மொழி|భాష|ಭಾಷೆ|മലയാളം|ਭਾਸ਼ਾ)",
+    'overview': r'(show|view|see|open).*?(dashboard|overview|summary)',
+    'loan_buddy': r'(talk|chat|discuss|help).*?(loan|assistant|buddy)',
+    'loan_guard': r'(analyze|check|review|verify).*?(document|application|paper)',
+    'eligibility': r'(check|know|tell|see).*?(eligible|qualify|eligibility)',
+    'emi_analysis': r'(calculate|compute|check|show|tell|know|what|want).*?(emi|payment|installment|monthly)',
+    'news': r'(show|tell|get|want).*?(news|updates|latest)',
+    'settings': r'(change|update|modify|manage).*?(settings|profile|account)',
 }
 
 LOAN_INTENTS = {
@@ -75,9 +118,14 @@ LANGUAGE_INSTRUCTIONS = {
     "pa-IN": "Respond in Punjabi (ਪੰਜਾਬੀ ਵਿੱਚ ਜਵਾਬ ਦਿਓ).",
 }
 
-
 def detect_intent(message):
     message = message.lower()
+    # Check EMI keywords first
+    emi_keywords = ['emi', 'calculate', 'payment', 'installment', 'monthly payment']
+    if any(keyword in message.lower() for keyword in emi_keywords):
+        return 'emi_analysis'
+    
+    # Then check other intents
     for intent, pattern in INTENTS.items():
         if re.search(pattern, message):
             return intent
@@ -99,63 +147,49 @@ def generate_loan_guidance(path, language):
             "en-IN": "I'll help you check your loan eligibility. Please fill in your details and I'll guide you through each step.",
             "hi-IN": "मैं आपकी लोन पात्रता की जांच करने में मदद करूंगा। कृपया अपनी जानकारी भरें और मैं आपको हर चरण में मार्गदर्शन करूंगा।",
         },
-        "/dashboard/applications/new": {
+        "/dashboard/applications": {
             "en-IN": "Let's start your loan application. I'll help you with the required documents and guide you through the process.",
             "hi-IN": "चलिए आपका लोन आवेदन शुरू करते हैं। मैं आपको आवश्यक दस्तावेजों के साथ प्रक्रिया में मदद करूंगा।",
         },
-        # Add more paths and translations
-    }
-    return guidance.get(path, {}).get(language, guidance[path]["en-IN"])
-
-
-def generate_navigation_response(intent, language, message, current_path=None):
-    """Enhanced navigation response with contextual guidance"""
-    actions = {
-        "loan_check": {
-            "action": "navigate",
-            "path": "/dashboard/eligibility",
-            "response": {
-                "en-IN": "Let me check your loan eligibility. Taking you to the eligibility checker.",
-                "hi-IN": "मैं आपकी लोन पात्रता की जांच करता हूं। आपको पात्रता चेकर पर ले जा रहा हूं।",
-                # Add translations for other languages
-            },
+        "/dashboard/emiAnalysis": {
+            "en-IN": "I'll help you calculate and analyze your EMI. Enter your loan details and I'll show you the breakdown.",
+            "hi-IN": "मैं आपकी EMI की गणना और विश्लेषण करने में मदद करूंगा। अपने लोन का विवरण दर्ज करें और मैं आपको विश्लेषण दिखाऊंगा।",
         },
-        "apply_loan": {
-            "action": "navigate",
-            "path": "/dashboard/applications",
-            "response": {
-                "en-IN": "I'll help you apply for a loan. Redirecting to the loan application page.",
-                "hi-IN": "मैं आपको लोन के लिए आवेदन करने में मदद करूंगा। लोन आवेदन पेज पर रीडायरेक्ट कर रहा हूं।",
-                # Add translations for other languages
-            },
-        },
-        "profile_view": {
-            "action": "navigate",
-            "path": "/dashboard/profile",
-            "response": {
-                "en-IN": "Taking you to your profile page.",
-                "hi-IN": "आपको आपके प्रोफ़ाइल पेज पर ले जा रहा हूं।",
-                # Add translations for other languages
-            },
+        "/dashboard/loangaurd": {
+            "en-IN": "Upload your loan documents and I'll help you analyze them.",
+            "hi-IN": "अपने लोन दस्तावेज अपलोड करें और मैं उनका विश्लेषण करने में आपकी मदद करूंगा।",
         },
     }
+    # Return empty guidance if path not found to avoid KeyError
+    return guidance.get(path, {}).get(language) or guidance.get(path, {}).get(
+        "en-IN", ""
+    )
 
-    if intent in actions:
-        response_data = actions[intent]
-        guidance = generate_loan_guidance(response_data["path"], language)
 
-        return {
-            "action": "navigate",
-            "path": response_data["path"],
-            "response": response_data["response"].get(
-                language, response_data["response"]["en-IN"]
-            ),
-            "guidance": guidance,
-            "suggestions": get_contextual_suggestions(response_data["path"], language),
-            "detected_language": language,
-        }
-
-    return None
+def generate_navigation_response(intent, language, message):
+    """Enhanced navigation response with immediate redirection"""
+    if intent not in PROJECT_PATHS:
+        return None
+        
+    path = PROJECT_PATHS[intent]
+    description = FEATURE_DESCRIPTIONS[intent]['description']
+    
+    responses = {
+        'en-IN': f"Taking you to {description.lower()}",
+        'hi-IN': f"आपको {description} पर ले जा रहा हूं"
+    }
+    
+    # Force navigate for EMI and eligibility
+    force_navigate = intent in ['emi_analysis', 'eligibility']
+    
+    return {
+        'action': 'navigate',
+        'path': path,
+        'response': responses.get(language, responses['en-IN']),
+        'suggestions': get_default_suggestions(),
+        'detected_language': language,
+        'force_navigate': force_navigate
+    }
 
 
 def generate_loan_response(intent, language):
@@ -241,33 +275,17 @@ def get_loanbuddy_system_prompt(language_code):
     {language_instruction}"""
 
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.json
-    message = data.get("message", "")
-    language = data.get("language", "en-IN")
+def get_default_suggestions():
+    """Get default suggestions when no specific ones are available"""
+    return [
+        "Check loan eligibility",
+        "Calculate EMI",
+        "Analyze loan documents",
+        "View loan options"
+    ]
 
-    # First check for loan-specific intents
-    loan_intent = detect_loan_intent(message)
-    if loan_intent:
-        response = generate_loan_response(loan_intent, language)
-        if response:
-            return jsonify(
-                {
-                    "success": True,
-                    "data": json.dumps(
-                        format_response(
-                            text=response["response"][language],
-                            action="navigate",
-                            path=response["path"],
-                            suggestions=response["suggestions"],
-                            language=language,
-                        )
-                    ),
-                }
-            )
-
-    # Process with AI
+def process_with_ai(message, language):
+    """Process message with AI when no specific intent is matched"""
     system_prompt = get_loanbuddy_system_prompt(language)
 
     try:
@@ -283,39 +301,77 @@ def chat():
 
         response_content = chat_completion.choices[0].message.content.strip()
 
-        # Ensure valid JSON
         try:
             parsed_response = json.loads(response_content)
             if not all(k in parsed_response for k in ["action", "response"]):
                 raise ValueError("Invalid response format")
+            return parsed_response
         except:
-            parsed_response = format_response(
-                text=response_content,
-                suggestions=[
-                    "Tell me more about loans",
-                    "Check my eligibility",
-                    "How can I apply?",
-                ],
-                language=language,
-            )
-
-        return jsonify({"success": True, "data": json.dumps(parsed_response)})
+            return {
+                "action": "stay",
+                "response": response_content,
+                "suggestions": get_default_suggestions(),
+                "detected_language": language
+            }
 
     except Exception as e:
-        logger.error(f"Error processing chat: {str(e)}", exc_info=True)
-        return jsonify(
-            {
-                "success": False,
-                "error": str(e),
-                "data": json.dumps(
-                    format_response(
-                        text="I apologize, but I encountered an error. Please try again.",
-                        language=language,
-                    )
-                ),
-            }
-        )
+        logger.error(f"AI processing error: {str(e)}")
+        return {
+            "action": "stay",
+            "response": "I apologize, but I encountered an error. Please try again.",
+            "suggestions": get_default_suggestions(),
+            "detected_language": language
+        }
 
+@app.route("/chat", methods=["POST"])
+def chat():
+    try:
+        data = request.json
+        message = data.get("message", "")
+        language = data.get("language", "en-IN")
+        
+        # First check for intent
+        intent = detect_intent(message)
+        
+        # Handle navigation intents
+        if intent in PROJECT_PATHS:
+            nav_response = generate_navigation_response(intent, language, message)
+            if nav_response:
+                return jsonify({"success": True, "data": json.dumps(nav_response)})
+        
+        # Check for loan-specific intents
+        loan_intent = detect_loan_intent(message)
+        if loan_intent:
+            response = generate_loan_response(loan_intent, language)
+            if response:
+                return jsonify({
+                    "success": True,
+                    "data": json.dumps(
+                        format_response(
+                            text=response["response"][language],
+                            action="navigate",
+                            path=response["path"],
+                            suggestions=response["suggestions"],
+                            language=language,
+                        )
+                    ),
+                })
+        
+        # For non-navigation intents, process with AI
+        ai_response = process_with_ai(message, language)
+        return jsonify({"success": True, "data": json.dumps(ai_response)})
+        
+    except Exception as e:
+        logger.error(f"Chat error: {str(e)}")
+        error_response = format_response(
+            text="I apologize, but I encountered an error. Please try again.",
+            language=language
+        )
+        return jsonify({
+            "success": False, 
+            "error": str(e), 
+            "data": json.dumps(error_response)
+        })
 
 # Add error handler
 @app.errorhandler(500)
