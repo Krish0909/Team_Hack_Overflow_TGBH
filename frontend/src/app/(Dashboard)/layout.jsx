@@ -70,6 +70,12 @@ export default function DashboardLayout({ children }) {
             color: "text-orange-500",
         },
         {
+          title: "Latest News",
+          href: "/dashboard/news",
+          icon: Newspaper,
+          color: "text-rose-500",
+      },
+        {
             title: "Settings",
             href: "/dashboard/settings",
             icon: Settings,
