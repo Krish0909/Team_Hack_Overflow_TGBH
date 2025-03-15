@@ -19,6 +19,7 @@ import {
     MessagesSquare,
     Globe,
     Calculator,
+    Newspaper,
 } from "lucide-react";
 import Link from "next/link";
 import { ThemeProvider } from "@/components/theme-provider";

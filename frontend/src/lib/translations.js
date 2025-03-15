@@ -28,7 +28,8 @@ export const translations = {
       dark: 'Dark',
       light: 'Light',
       system: 'System',
-      emiCalculator:"EMI Calculator"
+      emiCalculator:"EMI Calculator",
+      news: "Latest News"
     },
     dashboard: {
       welcome: 'Welcome',

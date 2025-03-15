@@ -2,16 +2,16 @@
 import { useEffect, useState } from "react";
 
 const greetings = {
-    "en-IN": "So how can I help you today?",
-    "hi-IN": "तो आज मैं आपकी कैसे मदद कर सकता हूं?",
-    "bn-IN": "তাহলে আজ আমি আপনাকে কিভাবে সাহায্য করতে পারি?",
-    "ta-IN": "அப்படியானால் இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்?",
-    "te-IN": "మరి నేను ఈరోజు మీకు ఎలా సహాయం చేయగలను?",
-    "mr-IN": "तर मी आज तुम्हाला कशी मदत करू शकतो?",
-    "gu-IN": "તો આજે હું તમને કેવી રીતે મદદ કરી શકું?",
-    "kn-IN": "ಹಾಗಾದರೆ ಇಂದು ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?",
-    "ml-IN": "അപ്പോൾ ഇന്ന് എനിക്ക് നിങ്ങളെ എങ്ങനെ സഹായിക്കാൻ കഴിയും?",
-    "pa-IN": "ਤਾਂ ਅੱਜ ਮੈਂ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?",
+    "en-IN": "Type your loan query here...",
+    "hi-IN": "अपना लोन प्रश्न यहां टाइप करें...",
+    "bn-IN": "আপনার ঋণ সম্পর্কিত প্রশ্ন এখানে টাইপ করুন...",
+    "ta-IN": "உங்கள் கடன் கேள்வியை இங்கே தட்டச்சு செய்யவும்...",
+    "te-IN": "మీ రుణ ప్రశ్నను ఇక్కడ టైప్ చేయండి...",
+    "mr-IN": "तुमचा कर्ज प्रश्न येथे टाइप करा...",
+    "gu-IN": "તમારો લોન પ્રશ્ન અહીં ટાઇપ કરો...",
+    "kn-IN": "ನಿಮ್ಮ ಸಾಲದ ಪ್ರಶ್ನೆಯನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...",
+    "ml-IN": "നിങ്ങളുടെ വായ്പാ ചോദ്യം ഇവിടെ ടൈപ്പ് ചെയ്യുക...",
+    "pa-IN": "ਆਪਣਾ ਲੋਨ ਸਵਾਲ ਇੱਥੇ ਟਾਈਪ ਕਰੋ...",
 };
 
 export default function TypewriterText({ language: initialLanguage }) {
@@ -60,5 +60,22 @@ export default function TypewriterText({ language: initialLanguage }) {
         }
     }, [currentIndex, currentLanguage, isDeleting]);
 
-    return <div className="h-6 text-xl mt-2 mb-1 text-gray-700">{text}</div>;
+    return (
+        <div className="flex items-center gap-2 text-gray-600 min-h-[28px]">
+            {" "}
+            {/* Changed text color */}
+            <div className="flex gap-1">
+                <span
+                    className={`h-2 w-2 rounded-full bg-[#25D366] animate-bounce [animation-delay:-0.3s]`}
+                ></span>
+                <span
+                    className={`h-2 w-2 rounded-full bg-[#25D366] animate-bounce [animation-delay:-0.15s]`}
+                ></span>
+                <span
+                    className={`h-2 w-2 rounded-full bg-[#25D366] animate-bounce`}
+                ></span>
+            </div>
+            <span className="text-base">{text}</span>
+        </div>
+    );
 }

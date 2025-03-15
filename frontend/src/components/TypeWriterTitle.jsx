@@ -68,10 +68,10 @@ export default function TypewriterTitle() {
     }, [currentIndex, currentLanguage, isDeleting, isTransitioning, text]);
 
     return (
-        <span className="bg-clip-text text-transparent bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 inline-block pt-4">
+        <span className="bg-clip-text text-transparent bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 inline-block pt-5">
             <span>Loan</span>
             <span>{text}</span>
-            <span className="animate-pulse">|</span>
+            <span className="animate-pulse text-emerald-500">_</span>
         </span>
     );
 }

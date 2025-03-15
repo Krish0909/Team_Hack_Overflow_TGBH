@@ -12,6 +12,7 @@ frontend/ENV/
 backend/env.bak/
 backend/venv.bak/
 backend/tgib
+backend/tgbh
 
 # Ignore macOS system files
 .DS_Store
