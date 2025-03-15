@@ -145,7 +145,7 @@ export default function NotificationsPanel() {
                   >
                     <div className="flex gap-4">
                       <div className={cn(
-                        "p-2 rounded-full shrink-0",
+                        " h-full p-2 rounded-full shrink-0",
                         notification.type === 'warning' 
                           ? 'bg-red-100 text-red-700' 
                           : 'bg-blue-100 text-blue-700'

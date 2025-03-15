@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useUser } from "@clerk/nextjs";
 import { supabase } from '@/lib/supabase';
-import { useLanguage } from '@/lib/languageContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +27,6 @@ const loanTypes = [
 
 export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
   const { user } = useUser();
-  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     loan_type: '',
@@ -110,7 +108,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] h-[95vh]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">{t('dashboard.addNewLoan')}</DialogTitle>
+          <DialogTitle className="text-2xl">Add New Loan</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="h-full pr-4 -mr-4">

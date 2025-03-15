@@ -63,11 +63,8 @@ const HomePage = () => {
             onChange={(e) => setCurrentLanguage(e.target.value)}
             className="bg-background border rounded-md px-2 py-1"
         >
-            {Object.entries(languages).map(([code, name]) => (
-                <option key={code} value={code}>
-                    {name}
-                </option>
-            ))}
+            <option value="en-IN">English</option>
+            {/* Add other languages here when needed */}
         </select>
     );
 

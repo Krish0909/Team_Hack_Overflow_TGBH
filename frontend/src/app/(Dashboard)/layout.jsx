@@ -41,47 +41,35 @@ export default function DashboardLayout({ children }) {
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
-    const { language, setLanguage, t } = useLanguage();
+    const { language, setLanguage } = useLanguage();
 
     const sidebarLinks = [
         {
-            title: t("common.overview"),
+            title: "Overview",
             href: "/dashboard",
             icon: LayoutDashboard,
             color: "text-blue-500",
         },
         {
-            title: t("common.loanAssistant"),
+            title: "Loan Assistant",
             href: "/dashboard/loanBuddy",
             icon: MessagesSquare,
             color: "text-green-500",
         },
         {
-            title: t("common.myLoans"),
-            href: "/dashboard/applications",
-            icon: ScrollText,
-            color: "text-purple-500",
-        },
-        {
-            title: t("common.eligibilityCheck"),
+            title: "Eligibility Check",
             href: "/dashboard/eligibility",
             icon: BadgeDollarSign,
             color: "text-yellow-500",
         },
         {
-            title: t("common.emiCalculator"),
+            title: "EMI Analysis",
             href: "/dashboard/emiAnalysis",
             icon: Calculator,
             color: "text-orange-500",
         },
         {
-            title: t("common.profile"),
-            href: "/dashboard/profile",
-            icon: User,
-            color: "text-gray-500",
-        },
-        {
-            title: t("common.settings"),
+            title: "Settings",
             href: "/dashboard/settings",
             icon: Settings,
             color: "text-gray-500",
@@ -119,6 +107,22 @@ export default function DashboardLayout({ children }) {
     if (!isLoaded || isCheckingOnboarding) {
         return <div>Loading...</div>;
     }
+
+    const languageSelector = (
+        <Select
+            value={language}
+            onValueChange={(value) => setLanguage(value, user.id)}
+        >
+            <SelectTrigger className="w-[180px]">
+                <Globe className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Language" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="en-IN">English</SelectItem>
+                {/* Add other languages here when needed */}
+            </SelectContent>
+        </Select>
+    );
 
     return (
         <ThemeProvider
@@ -167,31 +171,7 @@ export default function DashboardLayout({ children }) {
                     <div className="p-4 border-t border-gray-200">
                         <div className="space-y-4">
                             <div className="flex items-center justify-between px-4">
-                                <Select
-                                    value={language}
-                                    onValueChange={(value) =>
-                                        setLanguage(value, user.id)
-                                    }
-                                >
-                                    <SelectTrigger className="w-[180px]">
-                                        <Globe className="mr-2 h-4 w-4" />
-                                        <SelectValue
-                                            placeholder={t("common.language")}
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {Object.entries(languages).map(
-                                            ([code, name]) => (
-                                                <SelectItem
-                                                    key={code}
-                                                    value={code}
-                                                >
-                                                    {name}
-                                                </SelectItem>
-                                            )
-                                        )}
-                                    </SelectContent>
-                                </Select>
+                                {languageSelector}
                                 <ModeToggle />
                             </div>
                             <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-card">
@@ -204,7 +184,7 @@ export default function DashboardLayout({ children }) {
                                 />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-foreground truncate">
-                                        {t("common.yourAccount")}
+                                        Your Account
                                     </p>
                                 </div>
                             </div>

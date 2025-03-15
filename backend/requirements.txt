@@ -1,1 +1,1 @@
-Flask flask-cors groq pypdf2 paddlepaddle paddleocr python-docx pillow pymupdf python-dotenv
+Flask flask-cors groq pypdf2 paddlepaddle paddleocr python-docx pillow pymupdf python-dotenv matplotlib seaborn
