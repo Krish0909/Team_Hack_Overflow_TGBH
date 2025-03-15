@@ -20,6 +20,8 @@ import {
     Globe,
     Calculator,
     Newspaper,
+    Shield,
+    ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -55,6 +57,12 @@ export default function DashboardLayout({ children }) {
             href: "/dashboard/loanBuddy",
             icon: MessagesSquare,
             color: "text-green-500",
+        },
+        {
+            title: "Scan Documents",
+            href: "/dashboard/loangaurd",
+            icon: ShieldAlert,
+            color: "text-purple-500",
         },
         {
             title: "Eligibility Check",
