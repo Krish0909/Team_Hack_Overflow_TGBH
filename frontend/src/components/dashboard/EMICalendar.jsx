@@ -106,14 +106,17 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
   };
 
   return (
-    <Card className="h-full bg-gradient-to-br from-background via-background to-primary/5">
+    <Card className="border-emerald-200/50 bg-gradient-to-br from-background via-background to-emerald-500/5">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CalendarClock className="h-5 w-5 text-primary" />
+            <CalendarClock className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             EMI Calendar
           </div>
-          <Badge variant="outline" className="ml-2 bg-primary/10">
+          <Badge 
+            variant="outline" 
+            className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+          >
             {events.filter(e => !e.isPaid).length} Pending EMIs
           </Badge>
         </CardTitle>
@@ -190,7 +193,7 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
                                   event.isPaid && "bg-green-500",
                                   !event.isPaid && event.isPast && "bg-red-500",
                                   !event.isPaid && !event.isPast && event.isToday && "bg-yellow-500",
-                                  !event.isPaid && !event.isPast && !event.isToday && "bg-blue-500"
+                                  !event.isPaid && !event.isPast && !event.isToday && "bg-emerald-400"
                                 )}
                               />
                             ))}
@@ -205,7 +208,7 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
               {/* Calendar Legend */}
               <div className="mt-4 flex flex-wrap gap-3 justify-center text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
                   <span>Upcoming EMI</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -237,7 +240,7 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
                         event.isPaid ? 'border-green-200 bg-green-50/50' :
                         event.isPast ? 'border-red-200 bg-red-50/50' :
                         event.isToday ? 'border-yellow-200 bg-yellow-50/50' :
-                        'border-blue-200 bg-blue-50/50'
+                        'border-emerald-200 bg-emerald-50/50'
                       }`}
                     >
                       <div className="flex flex-col gap-2">

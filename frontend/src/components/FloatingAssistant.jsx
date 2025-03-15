@@ -505,32 +505,27 @@ export default function FloatingAssistant() {
     };
 
     return (
-        <div className="fixed bottom-4 right-4 z-50">
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 50, scale: 0.3 }}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 50, scale: 0.3 }}
-                        className="bg-card rounded-lg shadow-2xl mb-4 w-96"
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="mb-4 bg-card rounded-lg shadow-2xl w-96"
                     >
                         {/* Chat Header */}
-                        <div className="p-4 border-b flex justify-between items-center bg-primary text-primary-foreground rounded-t-lg">
+                        <div className="p-4 border-b flex justify-between items-center bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-lg">
                             <div className="flex items-center gap-2">
-                                <Bot
-                                    className={`h-5 w-5 ${
-                                        speaking ? "animate-pulse" : ""
-                                    }`}
-                                />
-                                <h3 className="font-medium">
-                                    FinSaathi Assistant
-                                </h3>
+                                <Bot className={`h-5 w-5 ${speaking ? "animate-pulse" : ""}`} />
+                                <h3 className="font-medium">FinSaathi Assistant</h3>
                             </div>
                             <div className="flex items-center gap-2">
                                 {speaking && (
                                     <button
                                         onClick={togglePause}
-                                        className="p-1 hover:bg-primary-foreground/10 rounded-full"
+                                        className="p-1 hover:bg-white/10 rounded-full transition-colors"
                                     >
                                         {isPaused ? (
                                             <Play className="h-4 w-4" />
@@ -539,7 +534,7 @@ export default function FloatingAssistant() {
                                         )}
                                     </button>
                                 )}
-                                <button onClick={handleClose} className="hover:opacity-75">
+                                <button onClick={() => setIsOpen(false)} className="hover:bg-white/10 p-1 rounded-full transition-colors">
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
@@ -643,12 +638,18 @@ export default function FloatingAssistant() {
             </AnimatePresence>
 
             <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className="bg-primary text-primary-foreground p-4 rounded-full shadow-lg hover:bg-primary/90"
+                className={`bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-full shadow-lg hover:shadow-emerald-500/25 transition-shadow ${
+                    isOpen ? 'rotate-180' : ''
+                } transition-transform duration-200`}
             >
-                <Bot className="h-6 w-6" />
+                {isOpen ? (
+                    <X className="h-6 w-6" />
+                ) : (
+                    <Bot className="h-6 w-6" />
+                )}
             </motion.button>
         </div>
     );

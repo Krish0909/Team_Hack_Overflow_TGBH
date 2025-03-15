@@ -66,7 +66,7 @@ export default function RootLayout({ children }) {
                     >
                         <LanguageProvider>
                             {children}
-                            <FloatingAssistant />
+                            {/* <FloatingAssistant /> */}
                         </LanguageProvider>
                     </ThemeProvider>
                 </body>

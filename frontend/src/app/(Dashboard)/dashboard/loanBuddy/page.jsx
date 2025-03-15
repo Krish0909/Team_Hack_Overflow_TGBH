@@ -199,16 +199,27 @@ export default function LoanBuddyPage() {
 
   return (
     <div className="container max-w-4xl mx-auto p-4 space-y-4">
-      <Card className="h-[calc(100vh-8rem)] flex flex-col bg-card">
+      {/* Updated Header Card */}
+      <div className="relative overflow-hidden rounded-lg border bg-card p-4 mb-4">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" />
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+          AI Loan Assistant
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Your intelligent companion for loan analysis and document understanding
+        </p>
+      </div>
+
+      <Card className="h-[calc(100vh-12rem)] flex flex-col bg-card border-emerald-200/50">
         {/* Chat Header */}
-        <div className="p-4 border-b flex items-center gap-2">
-          <Bot className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold">LoanBuddy Assistant</h1>
+        <div className="p-4 border-b flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30">
+          <Bot className="h-5 w-5 text-emerald-600" />
+          <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-200">LoanBuddy Assistant</h2>
         </div>
 
-        {/* Add current document indicator if exists */}
+        {/* Current Document Indicator - Updated styling */}
         {currentDocument && (
-          <div className="px-4 py-2 bg-muted/50 border-b flex items-center justify-between">
+          <div className="px-4 py-2 bg-emerald-50/50 dark:bg-emerald-900/20 border-b flex items-center justify-between">
             <div className="flex items-center gap-2">
               {currentDocument.type === 'image' ? (
                 <ImageIcon className="h-4 w-4" />
@@ -227,10 +238,10 @@ export default function LoanBuddyPage() {
           </div>
         )}
 
-        {/* Messages Area */}
+        {/* Messages Area - Updated styling */}
         <div 
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-4"
+          className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-white to-emerald-50/30 dark:from-gray-900 dark:to-emerald-900/10"
         >
           <AnimatePresence>
             {messages.map((message, index) => (
@@ -289,8 +300,8 @@ export default function LoanBuddyPage() {
           )}
         </div>
 
-        {/* Input Area */}
-        <form onSubmit={handleSubmit} className="p-4 border-t space-y-4">
+        {/* Input Area - Updated styling */}
+        <form onSubmit={handleSubmit} className="p-4 border-t bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800/50 dark:to-gray-900/50">
           {showPromptInput ? (
             <div className="space-y-4">
               {/* File Preview */}

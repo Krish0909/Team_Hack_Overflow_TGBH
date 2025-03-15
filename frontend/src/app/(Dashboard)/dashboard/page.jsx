@@ -119,57 +119,72 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Overview</h1>
-        <div className="flex items-center gap-4">
-          <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
-            <SheetTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="relative"
-              >
-                <Bell className="h-5 w-5" />
-                {notifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
-                    {notifications.length}
-                  </span>
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Notifications</SheetTitle>
-              </SheetHeader>
-              <div className="mt-4 space-y-4">
-                {notifications.length === 0 ? (
-                  <p className="text-center text-muted-foreground">No new notifications</p>
-                ) : (
-                  notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className="flex gap-4 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-                    >
-                      <div className={`p-2 rounded-full ${notification.color}`}>
-                        <notification.icon className="h-4 w-4" />
+      {/* Updated Header */}
+      <div className="relative overflow-hidden rounded-lg border bg-card p-4 mb-6">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" />
+        <div className="flex justify-between items-center relative">
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              Overview
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage your loans and track EMI payments
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="relative"
+                >
+                  <Bell className="h-5 w-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
+                      {notifications.length}
+                    </span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Notifications</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 space-y-4">
+                  {notifications.length === 0 ? (
+                    <p className="text-center text-muted-foreground">No new notifications</p>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className="flex gap-4 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                      >
+                        <div className={`p-2 rounded-full ${notification.color}`}>
+                          <notification.icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{notification.title}</p>
+                          <p className="text-sm text-muted-foreground">{notification.message}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground">{notification.message}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
-          <Button onClick={() => setShowAddLoan(true)} className="bg-primary hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Loan
-          </Button>
+                    ))
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+            <Button 
+              onClick={() => setShowAddLoan(true)} 
+              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Loan
+            </Button>
+          </div>
         </div>
       </div>
 
+      {/* Updated Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatsCard
           title="Total Loan Amount"
@@ -197,39 +212,57 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Updated Tabs */}
       <Tabs defaultValue={defaultTab} className="space-y-4">
-        <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <LayoutDashboard className="h-4 w-4" />
+        <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-100/50 dark:bg-emerald-900/50 p-1">
+          <TabsTrigger 
+            value="overview" 
+            className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+          >
+            <LayoutDashboard className="h-4 w-4 mr-2" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="loans" className="flex items-center gap-2">
-            <ListTodo className="h-4 w-4" />
+          <TabsTrigger 
+            value="loans" 
+            className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+          >
+            <ListTodo className="h-4 w-4 mr-2" />
             Loans
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <PieChart className="h-4 w-4" />
+          <TabsTrigger 
+            value="analytics" 
+            className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+          >
+            <PieChart className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="flex items-center gap-2">
-            <CalendarClock className="h-4 w-4" />
+          <TabsTrigger 
+            value="calendar" 
+            className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+          >
+            <CalendarClock className="h-4 w-4 mr-2" />
             Calendar
           </TabsTrigger>
         </TabsList>
 
+        {/* Updated Tab Content */}
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
-              <LoansList loans={loans} onUpdate={fetchLoans} />
+            <div className="lg:col-span-2 space-y-4">
+              <Card className="border-emerald-200/50">
+                <LoansList loans={loans} onUpdate={fetchLoans} />
+              </Card>
             </div>
             <div>
-              <NotificationsPanel />
+              <Card className="border-emerald-200/50">
+                <NotificationsPanel />
+              </Card>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="loans" className="space-y-4">
-          <Card className="p-6">
+          <Card className="border-emerald-200/50 p-6">
             <LoansList loans={loans} onUpdate={fetchLoans} expanded />
           </Card>
         </TabsContent>
@@ -250,7 +283,9 @@ export default function DashboardPage() {
               />
             </div>
             <div>
-              <NotificationsPanel />
+              <Card className="border-emerald-200/50">
+                <NotificationsPanel />
+              </Card>
             </div>
           </div>
         </TabsContent>

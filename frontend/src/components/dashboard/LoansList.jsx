@@ -87,14 +87,14 @@ export default function LoansList({ loans, onUpdate }) {
   };
 
   return (
-    <Card>
+    <Card className="border-emerald-200/50">
       <CardHeader>
-        <CardTitle>Your Loans</CardTitle>
+        <CardTitle className="text-emerald-800 dark:text-emerald-200">Your Loans</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-emerald-50/50 dark:hover:bg-emerald-950/50">
               <TableHead>Loan Type</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>EMI</TableHead>
@@ -106,7 +106,10 @@ export default function LoansList({ loans, onUpdate }) {
           </TableHeader>
           <TableBody>
             {loans.map((loan) => (
-              <TableRow key={loan.id}>
+              <TableRow 
+                key={loan.id}
+                className="hover:bg-emerald-50/50 dark:hover:bg-emerald-950/50"
+              >
                 <TableCell className="font-medium">{loan.loan_type}</TableCell>
                 <TableCell>{formatCurrency(loan.loan_amount)}</TableCell>
                 <TableCell>{formatCurrency(loan.emi_amount)}</TableCell>
@@ -124,7 +127,11 @@ export default function LoansList({ loans, onUpdate }) {
                 </TableCell>
                 <TableCell>
                   <div className="w-[100px]">
-                    <Progress value={calculateProgress(loan)} className="h-2" />
+                    <Progress 
+                      value={calculateProgress(loan)} 
+                      className="h-2 bg-emerald-100 dark:bg-emerald-900"
+                      indicatorClassName="bg-gradient-to-r from-emerald-500 to-teal-500"
+                    />
                   </div>
                 </TableCell>
                 <TableCell>

@@ -139,9 +139,9 @@ export default function DashboardLayout({ children }) {
             enableSystem
             disableTransitionOnChange
         >
-            <div className="min-h-screen flex bg-gray-50">
-                {/* Desktop Sidebar */}
-                <aside className="hidden md:flex md:flex-col md:w-64 bg-white border-r border-gray-200 md:h-screen md:fixed">
+            <div className="min-h-screen flex bg-gradient-to-b from-emerald-50/50 to-teal-50/50 dark:from-gray-900 dark:to-gray-800">
+                {/* Desktop Sidebar - Updated logo color */}
+                <aside className="hidden md:flex md:flex-col md:w-64 bg-white/80 backdrop-blur-sm border-r border-emerald-200/50 dark:border-emerald-800/50 md:h-screen md:fixed">
                     <div className="p-6">
                         <a href="/">
                             <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export default function DashboardLayout({ children }) {
                                     src={loanSaathiLogo}
                                     className="h-8 w-8"
                                 />
-                                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                                     Loanसाथी
                                 </h1>
                             </div>
@@ -223,7 +223,7 @@ export default function DashboardLayout({ children }) {
                                             src={loanSaathiLogo}
                                             className="h-8 w-8"
                                         />
-                                        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                        <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                                             Loanसाथी
                                         </h1>
                                     </div>

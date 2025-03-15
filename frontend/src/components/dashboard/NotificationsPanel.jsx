@@ -99,15 +99,15 @@ export default function NotificationsPanel() {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-background via-background to-primary/5">
+    <Card className="bg-gradient-to-br from-background via-background to-emerald-500/5 border-emerald-200/50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
+            <Bell className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Notifications
           </CardTitle>
           {notifications.length > 0 && (
-            <Badge className="bg-primary/10 text-primary">
+            <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               {notifications.length} New
             </Badge>
           )}
@@ -122,7 +122,7 @@ export default function NotificationsPanel() {
                 animate={{ opacity: 1 }}
                 className="flex flex-col items-center justify-center h-[200px] text-center"
               >
-                <Bell className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <Bell className="h-12 w-12 text-emerald-500/20 dark:text-emerald-400/20 mb-4" />
                 <p className="text-muted-foreground">All caught up!</p>
               </motion.div>
             ) : (
@@ -139,8 +139,8 @@ export default function NotificationsPanel() {
                       "p-4 rounded-lg border transition-all duration-200",
                       "hover:shadow-md hover:scale-[1.02]",
                       notification.type === 'warning' 
-                        ? 'hover:border-red-500 bg-red-50/50' 
-                        : 'hover:border-primary bg-blue-50/50'
+                        ? 'hover:border-red-500/50 bg-red-50/30 dark:bg-red-950/30' 
+                        : 'hover:border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/30'
                     )}
                   >
                     <div className="flex gap-4">

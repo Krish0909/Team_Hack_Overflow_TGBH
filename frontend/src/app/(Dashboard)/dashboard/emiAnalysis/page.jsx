@@ -174,12 +174,12 @@ export default function EMIAnalysisPage() {
 
     return (
         <div className="container mx-auto p-6 space-y-6">
-            <div className="relative overflow-hidden rounded-lg border bg-card p-8 mb-8">
+            <div className="relative overflow-hidden rounded-lg border bg-card p-4">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" />
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                     Smart Loan Analysis
                 </h1>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-sm text-muted-foreground mt-1">
                     Optimize your loan payments with AI-powered insights
                 </p>
             </div>

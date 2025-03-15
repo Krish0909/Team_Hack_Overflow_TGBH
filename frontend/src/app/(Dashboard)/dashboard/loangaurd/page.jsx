@@ -12,23 +12,27 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Upload, FileText, Languages, Eye } from "lucide-react";
+import { Upload, FileText, Languages, Eye, AlertTriangle, Check } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 const TranslationCard = ({ item }) => (
-    <div className="p-4 border rounded-lg mb-4 hover:bg-gray-50">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <h4 className="font-medium text-gray-700">Original Text</h4>
-                <p className="text-sm">{item.original}</p>
-                <p className="text-xs text-gray-500 mt-1">{item.purpose}</p>
+    <div className="p-6 border rounded-xl mb-4 hover:bg-emerald-50/50 transition-all duration-300 backdrop-blur-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+                <h4 className="font-medium text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Original Text
+                </h4>
+                <p className="text-sm bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">{item.original}</p>
+                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">{item.purpose}</p>
             </div>
-            <div>
-                <h4 className="font-medium text-blue-600">Translated Text</h4>
-                <p className="text-sm">{item.translated_text}</p>
-                <p className="text-xs text-blue-500 mt-1">
-                    {item.instructions}
-                </p>
+            <div className="space-y-2">
+                <h4 className="font-medium text-teal-700 dark:text-teal-300 flex items-center gap-2">
+                    <Languages className="w-4 h-4" />
+                    Translated Text
+                </h4>
+                <p className="text-sm bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">{item.translated_text}</p>
+                <p className="text-xs text-teal-600/70 dark:text-teal-400/70">{item.instructions}</p>
             </div>
         </div>
     </div>
@@ -40,8 +44,8 @@ const GuideSection = ({ guide }) => {
         : "";
 
     return (
-        <div className="prose prose-sm max-w-none">
-            <div className="whitespace-pre-wrap">{decodedGuide}</div>
+        <div className="prose prose-emerald dark:prose-invert max-w-none">
+            <div className="whitespace-pre-wrap bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl">{decodedGuide}</div>
         </div>
     );
 };
@@ -121,42 +125,45 @@ export default function LoanGaurd() {
 
     return (
         <div className="container mx-auto p-6 space-y-6">
-            <h1 className="text-3xl font-bold">
-                LoanGaurd - Document Analysis
-            </h1>
+            <div className="relative overflow-hidden rounded-lg border bg-card p-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" />
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    LoanGaurd Analysis
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Advanced document analysis and translation system to protect you from predatory lending practices
+                </p>
+            </div>
 
-            <Tabs defaultValue="upload" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
-                    <TabsTrigger value="upload">
+            <Tabs defaultValue="upload" className="space-y-8">
+                <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 p-1 bg-emerald-100/50 dark:bg-emerald-900/50 rounded-xl">
+                    <TabsTrigger value="upload" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
                         <Upload className="h-4 w-4 mr-2" />
                         Upload Document
                     </TabsTrigger>
-                    <TabsTrigger value="analysis">
+                    <TabsTrigger value="analysis" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
                         <Eye className="h-4 w-4 mr-2" />
                         Analysis
                     </TabsTrigger>
-                    <TabsTrigger value="translations">
+                    <TabsTrigger value="translations" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
                         <Languages className="h-4 w-4 mr-2" />
                         Translations
                     </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="upload">
-                    <Card>
+                    <Card className="border-emerald-200/50 backdrop-blur-sm">
                         <CardHeader>
-                            <CardTitle>Upload Loan Document</CardTitle>
+                            <CardTitle className="text-emerald-800 dark:text-emerald-200">Upload Loan Document</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">
+                        <CardContent className="space-y-6">
+                            <div className="grid gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                                         Select Target Language
                                     </label>
-                                    <Select
-                                        value={targetLanguage}
-                                        onValueChange={setTargetLanguage}
-                                    >
-                                        <SelectTrigger>
+                                    <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                                        <SelectTrigger className="bg-white/50 dark:bg-gray-800/50 border-emerald-200">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -179,47 +186,38 @@ export default function LoanGaurd() {
                                     </Select>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">
-                                        Upload Document (PDF or Image)
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                                        Upload Document
                                     </label>
                                     <div className="flex items-center justify-center w-full">
-                                        <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 hover:bg-gray-100">
-                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <FileText className="w-8 h-8 mb-4 text-gray-500" />
-                                                <p className="mb-2 text-sm text-gray-500">
-                                                    <span className="font-semibold">
-                                                        Click to upload
-                                                    </span>{" "}
-                                                    or drag and drop
+                                        <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-emerald-200 border-dashed rounded-xl cursor-pointer bg-emerald-50/50 dark:bg-gray-800/30 hover:bg-emerald-100/50 transition-all duration-300">
+                                            <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
+                                                <FileText className="w-12 h-12 mb-4 text-emerald-500" />
+                                                <p className="mb-2 text-sm text-emerald-700 dark:text-emerald-300">
+                                                    <span className="font-semibold">Click to upload</span> or drag and drop
                                                 </p>
-                                                <p className="text-xs text-gray-500">
-                                                    PDF or Image files
+                                                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">
+                                                    PDF or Image files supported
                                                 </p>
                                             </div>
-                                            <input
-                                                type="file"
-                                                className="hidden"
-                                                accept=".pdf,image/*"
-                                                onChange={handleFileChange}
-                                            />
+                                            <input type="file" className="hidden" accept=".pdf,image/*" onChange={handleFileChange} />
                                         </label>
                                     </div>
                                 </div>
 
                                 {file && (
-                                    <div className="text-sm text-gray-500">
-                                        Selected file: {file.name}
+                                    <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-lg">
+                                        <Check className="w-4 h-4" />
+                                        Selected: {file.name}
                                     </div>
                                 )}
 
                                 {loading && (
                                     <div className="space-y-2">
-                                        <Progress
-                                            value={progress}
-                                            className="w-full"
-                                        />
-                                        <p className="text-sm text-gray-500 text-center">
+                                        <Progress value={progress} className="w-full bg-emerald-100 dark:bg-emerald-900" 
+                                            indicatorClassName="bg-gradient-to-r from-emerald-500 to-teal-500" />
+                                        <p className="text-sm text-center text-emerald-600 dark:text-emerald-400">
                                             Processing document... {progress}%
                                         </p>
                                     </div>
@@ -228,11 +226,9 @@ export default function LoanGaurd() {
                                 <Button
                                     onClick={processDocument}
                                     disabled={!file || loading}
-                                    className="w-full"
+                                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
                                 >
-                                    {loading
-                                        ? "Processing..."
-                                        : "Analyze Document"}
+                                    {loading ? "Processing..." : "Analyze Document"}
                                 </Button>
                             </div>
                         </CardContent>
@@ -328,11 +324,11 @@ export default function LoanGaurd() {
             </Tabs>
 
             {loading && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <Card className="w-[300px]">
-                        <CardContent className="space-y-4 p-4">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <Card className="w-[300px] border-emerald-200/50">
+                        <CardContent className="space-y-4 p-6">
                             <Progress value={progress} className="w-full" />
-                            <p className="text-center text-sm">
+                            <p className="text-center text-sm text-emerald-600 dark:text-emerald-400">
                                 Processing document... {progress}%
                             </p>
                         </CardContent>

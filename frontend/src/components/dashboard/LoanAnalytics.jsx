@@ -4,7 +4,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function LoanAnalytics({ loans }) {
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  // Update the colors to match theme
+  const COLORS = ['#10B981', '#14B8A6', '#0EA5E9', '#8B5CF6', '#EC4899'];
 
   const loanTypeData = loans.reduce((acc, loan) => {
     acc[loan.loan_type] = (acc[loan.loan_type] || 0) + Number(loan.loan_amount);
@@ -30,15 +31,25 @@ export default function LoanAnalytics({ loans }) {
   };
 
   return (
-    <Card>
+    <Card className="border-emerald-200/50">
       <CardHeader>
-        <CardTitle>Loan Analytics</CardTitle>
+        <CardTitle className="text-emerald-800 dark:text-emerald-200">Loan Analytics</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="distribution">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="distribution">Loan Distribution</TabsTrigger>
-            <TabsTrigger value="emi">Monthly EMIs</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-emerald-100/50 dark:bg-emerald-900/50">
+            <TabsTrigger 
+              value="distribution"
+              className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+            >
+              Distribution
+            </TabsTrigger>
+            <TabsTrigger 
+              value="emi"
+              className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+            >
+              Monthly EMIs
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="distribution" className="h-[300px]">
