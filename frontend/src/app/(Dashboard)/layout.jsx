@@ -19,6 +19,7 @@ import {
     MessagesSquare,
     Globe,
     Calculator,
+    Newspaper,
 } from "lucide-react";
 import Link from "next/link";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -73,6 +74,12 @@ export default function DashboardLayout({ children }) {
             href: "/dashboard/emiAnalysis",
             icon: Calculator,
             color: "text-orange-500",
+        },
+        {
+            title: t("common.news"),
+            href: "/dashboard/news",
+            icon: Newspaper,
+            color: "text-rose-500",
         },
         {
             title: t("common.profile"),
