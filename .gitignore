@@ -1,0 +1,102 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore Python virtual environment directories
+backend/venv/
+backend/.env
+backend/.venv/
+backend/env/
+backend/ENV/
+frontend/env/
+frontend/ENV/
+backend/env.bak/
+backend/venv.bak/
+backend/tgib
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore log files
+*.log
+
+# Ignore IDE/editor specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Ignore build directories
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Ignore coverage reports
+coverage/
+*.cover
+*.coverage
+*.coveragerc
+.cache
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+*.orig
+*.rej
+
+# Ignore compiled files
+*.out
+*.o
+*.class
+*.dll
+*.exe
+*.so
+*.dylib
+
+# Ignore package files
+*.jar
+*.war
+*.ear
+*.gem
+*.deb
+*.rpm
+*.msi
+*.dmg
+*.pkg
+*.mpkg
+
+# Ignore compressed files
+*.7z
+*.gz
+*.zip
+*.tar
+*.tgz
+*.bz2
+*.xz
+
+# Ignore database files
+*.sql
+*.sqlite
+*.db
+*.db-journal
+*.pdb
+*.mdb
+*.ldf
+*.mdf
