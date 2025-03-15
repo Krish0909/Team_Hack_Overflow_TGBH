@@ -42,7 +42,7 @@ class SmartEMICalculator:
         """Set the basic loan details"""
         self.loan_amount = float(amount)
         self.interest_rate = float(rate)
-        # Convert term_years to months and ensure it's an integer
+        # Input is already in years, convert to months
         self.loan_term = int(float(term_years) * 12)
         self.monthly_interest_rate = float(rate) / (12 * 100)
 
@@ -117,23 +117,20 @@ class SmartEMICalculator:
         disposable_income = self.monthly_salary - self.monthly_expenses
         try:
             prompt = f"""
-            As a financial advisor, give smart payment advice for this loan in {self.language}:
+            As a financial advisor, give BRIEF but actionable advice for this loan in {self.language}. 
+            Keep response under 500 words. Focus on:
+            1. Key payment strategies
+            2. Impact of extra payments
+            3. Tax benefits (if applicable)
+            4. Risk factors
 
+            Loan Details:
             - Amount: ₹{loan_details['amount']:,}
-            - Interest Rate: {loan_details['rate']}%
+            - Rate: {loan_details['rate']}%
             - Term: {loan_details['term']} years
-            - Monthly EMI: ₹{loan_details['emi']:,}
-            - Total Interest: ₹{loan_details['total_interest']:,}
-            - User’s Monthly Salary: ₹{self.monthly_salary:,}
-            - User’s Monthly Expenses: ₹{self.monthly_expenses:,}
-            - Disposable Income: ₹{disposable_income:,}
-
-            Include:
-            1. Payment strategies based on user’s income
-            2. Effects of extra payments with examples
-            3. Ways to shorten the loan term
-            4. Tax benefits and other options
-            5. Useful tips for Indian borrowers
+            - EMI: ₹{loan_details['emi']:,}
+            - Income: ₹{self.monthly_salary:,}
+            - Expenses: ₹{self.monthly_expenses:,}
             """
 
             response = self.client.chat.completions.create(
@@ -194,7 +191,7 @@ class SmartEMICalculator:
             return f"Error getting recommendations: {str(e)}"
 
     def generate_detailed_report(self, extra_payment=5000):
-        """Generate a comprehensive loan analysis report with dynamic visualizations"""
+        """Generate a comprehensive loan analysis report with visualizations"""
         emi = self.calculate_emi()
         total_interest = self.calculate_total_interest()
         smart_payment_impact = self.calculate_smart_payment_impact(extra_payment)
@@ -205,16 +202,14 @@ class SmartEMICalculator:
             "emi": emi,
             "total_interest": total_interest,
         }
-        recommendations = self.get_groq_recommendations(loan_details)
-
-        # Create visualizations and capture as base64 images
+        
+        # Generate visualizations first
         disposable_income = self.monthly_salary - self.monthly_expenses
         extra_payments = [0, 2500, 5000, min(disposable_income - emi, 7500)]
         extra_payments = [x for x in extra_payments if x >= 0]
 
         # Visualization 1: Loan Balance Over Time
-        plt.figure(figsize=(10, 5))
-        # Ensure integer months for range
+        plt.figure(figsize=(12, 6))
         months = range(1, int(self.loan_term) + 1)
         colors = ["#FF9999", "#66B2FF", "#99FF99", "#FFCC99"]
         for i, extra in enumerate(extra_payments):
@@ -226,87 +221,73 @@ class SmartEMICalculator:
                 color=colors[i],
                 linewidth=2,
             )
-        plt.xlabel("Months", fontsize=10)
-        plt.ylabel("Balance (₹)", fontsize=10)
-        plt.title("Loan Balance Projection", fontsize=12, pad=15)
-        plt.legend(fontsize=8)
+        plt.xlabel("Months", fontsize=12)
+        plt.ylabel("Balance (₹)", fontsize=12)
+        plt.title("Loan Balance Projection", fontsize=14, pad=15)
+        plt.legend(fontsize=10)
         plt.grid(True, linestyle="--", alpha=0.7)
         buf1 = io.BytesIO()
-        plt.savefig(buf1, format="png", dpi=300)
+        plt.savefig(buf1, format="png", dpi=300, bbox_inches='tight')
         plt.close()
         loan_balance_img = base64.b64encode(buf1.getvalue()).decode("utf-8")
 
         # Visualization 2: Term Comparison
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=(12, 6))
         categories = [f"₹{extra:,}" for extra in extra_payments]
         terms = [
             self.calculate_smart_payment_impact(extra)["New_Term"] / 12
             for extra in extra_payments
         ]
         sns.barplot(x=categories, y=terms, palette="Blues")
-        plt.ylabel("Years", fontsize=10)
-        plt.title("Loan Term Comparison", fontsize=12, pad=15)
-        plt.xticks(fontsize=8)
-        plt.yticks(fontsize=8)
+        plt.ylabel("Years", fontsize=12)
+        plt.xlabel("Extra Monthly Payment", fontsize=12)
+        plt.title("Loan Term Comparison", fontsize=14, pad=15)
+        plt.xticks(fontsize=10, rotation=45)
+        plt.yticks(fontsize=10)
         buf2 = io.BytesIO()
-        plt.savefig(buf2, format="png", dpi=300)
+        plt.savefig(buf2, format="png", dpi=300, bbox_inches='tight')
         plt.close()
         term_comparison_img = base64.b64encode(buf2.getvalue()).decode("utf-8")
 
-        # Create structured markdown report
+        # Get AI recommendations
+        recommendations = self.get_groq_recommendations(loan_details)
+
+        # Create structured markdown report with embedded images
         report = f"""
-
-
 # Loan Analysis Report
 
----
+## Loan Overview
+| Parameter | Value |
+|-----------|-------|
+| Loan Amount | ₹{self.loan_amount:,.2f} |
+| Interest Rate | {self.interest_rate}% |
+| Loan Term | {self.loan_term//12} years |
+| Monthly EMI | ₹{emi:,.2f} |
+| Total Interest | ₹{total_interest:,.2f} |
 
-### Loan Overview
-#### Basic Details
-| Parameter          | Value              |
-|---------------------|--------------------|
-| Loan Amount         | ₹{self.loan_amount:,}  |
-| Interest Rate       | {self.interest_rate}%  |
-| Loan Term           | {self.loan_term//12} years |
-| Monthly EMI         | ₹{emi:,.2f}        |
-| Total Interest      | ₹{total_interest:,.2f}  |
+## Payment Impact Analysis
+| Category | Amount |
+|----------|--------|
+| Regular EMI | ₹{emi:,.2f} |
+| Suggested Extra Payment | ₹{extra_payment:,} |
+| Total Monthly Payment | ₹{emi + extra_payment:,.2f} |
+| Interest Saved | ₹{smart_payment_impact['Interest_Saved']:,.2f} |
+| Term Reduction | {smart_payment_impact['Original_Term'] - smart_payment_impact['New_Term']} months |
 
-#### User Financials
-| Category            | Amount             |
-|---------------------|--------------------|
-| Monthly Salary      | ₹{self.monthly_salary:,} |
-| Monthly Expenses    | ₹{self.monthly_expenses:,} |
-| Disposable Income   | ₹{disposable_income:,} |
+## Visual Analysis
 
----
-
-### Visual Analysis
+### Loan Balance Projection
+This graph shows how your loan balance decreases over time with different extra payment amounts.
 ![Loan Balance Projection](data:image/png;base64,{loan_balance_img})
+
+### Loan Term Comparison
+This chart compares how different extra payment amounts affect your loan term.
 ![Term Comparison](data:image/png;base64,{term_comparison_img})
 
----
+## AI Recommendations
 
-### Payment Scenarios
-#### Smart Payment Impact
-| Scenario            | Value              |
-|---------------------|--------------------|
-| Original Term       | {smart_payment_impact['Original_Term']} months |
-| New Term            | {smart_payment_impact['New_Term']} months |
-| Interest Saved      | ₹{smart_payment_impact['Interest_Saved']:,.2f} |
-
-#### Payment Strategy
-| Component           | Amount             |
-|---------------------|--------------------|
-| Regular EMI         | ₹{emi:,.2f}        |
-| Extra Payment       | ₹{extra_payment:,} |
-| Total Payment       | ₹{emi + extra_payment:,.2f} |
-| Term Reduction      | {smart_payment_impact['Original_Term'] - smart_payment_impact['New_Term']} months |
-
----
-
-### AI Recommendations
 {recommendations}
-        """
+"""
         return report
 
 
@@ -418,56 +399,27 @@ def generate_loan_suggestions(
     )
 
     # 2. Find optimal loans (lowest rate per category)
-    best_personal = loan_data[loan_data["loan_type"] == "Personal Loan"].nsmallest(
-        1, "interest_rate"
-    )
-    best_education = loan_data[loan_data["loan_type"] == "Education Loan"].nsmallest(
-        1, "interest_rate"
-    )
-    best_home = loan_data[loan_data["loan_type"] == "Home Loan"].nsmallest(
-        1, "interest_rate"
-    )
+    best_loans = {
+        "Personal Loan": loan_data[loan_data["loan_type"] == "Personal Loan"].nsmallest(1, "interest_rate"),
+        "Education Loan": loan_data[loan_data["loan_type"] == "Education Loan"].nsmallest(1, "interest_rate"),
+        "Home Loan": loan_data[loan_data["loan_type"] == "Home Loan"].nsmallest(1, "interest_rate")
+    }
 
-    top_loans = pd.concat([best_personal, best_education, best_home])
+    # 3. Create structured suggestions
+    formatted_suggestions = []
+    for loan_type, loan in best_loans.items():
+        if not loan.empty:
+            formatted_suggestions.append({
+                "type": loan_type,
+                "bank": loan['bank_name'].values[0],
+                "rate": float(loan['interest_rate'].values[0]),
+                "monthly_savings": round((float(loan['interest_rate'].values[0]) - float(user_loan_amount)) * user_loan_amount / 1200, 2)
+            })
 
-    # 3. Generate smart suggestions
-    suggestions = []
-    for _, row in top_loans.iterrows():
-        calculator = SmartEMICalculator(language, user_salary, user_expenses)
-        calculator.set_loan_details(
-            user_loan_amount, row["interest_rate"], user_loan_term
-        )
-
-        # Generate AI-powered recommendation
-        report = calculator.generate_detailed_report(extra_payment=5000)
-
-        suggestions.append(
-            {
-                "Bank": row["bank_name"],
-                "Loan Type": row["loan_type"],
-                "Interest Rate": row["interest_rate"],
-                "Recommendation": report.split("AI Recommendations")[1]
-                .split("Smart Payment Strategy")[0]
-                .strip(),
-            }
-        )
-
-    # 4. Create comparison summary
-    summary = f"""
-    === Smart Loan Suggestions ===
-    Based on {len(loan_data)} loan products analyzed:
-
-    1. Best Personal Loan: {best_personal['bank_name'].values[0]} ({best_personal['interest_rate'].values[0]}%)
-    2. Best Education Loan: {best_education['bank_name'].values[0]} ({best_education['interest_rate'].values[0]}%)
-    3. Best Home Loan: {best_home['bank_name'].values[0]} ({best_home['interest_rate'].values[0]}%)
-
-    Detailed recommendations:
-    """
-
-    for s in suggestions:
-        summary += f"\n--- {s['Bank']} ({s['Loan Type']}) ---\n{s['Recommendation']}\n"
-
-    return summary
+    return {
+        "total_analyzed": len(loan_data),
+        "best_loans": formatted_suggestions
+    }
 
 
 @emi_calculator.route("/calculate", methods=["POST"])
@@ -495,7 +447,7 @@ def calculate_emi():
         calculator.set_loan_details(
             amount=float(data.get("loan_amount", 0)),
             rate=float(data.get("interest_rate", 0)),
-            term_years=float(data.get("loan_term", 0)),
+            term_years=float(data.get("loan_term", 0)),  # Already in years
         )
 
         extra_payment = float(data.get("extra_payment", 0))

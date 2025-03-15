@@ -26,7 +26,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
 import Image from "next/image";
 import loanSaathiLogo from "@/assets/loansaathi.png";
-import { languages } from "@/lib/translations";
 import { useLanguage } from "@/lib/languageContext";
 import {
     Select,
