@@ -2,7 +2,9 @@
 <img src="https://github.com/user-attachments/assets/a626b2b7-c2b6-4206-923c-e7c6c4e113ec" width="400"/>
 
 ## Turning Complexity Into Clarity
-## Please find the demo Video Here : https://drive.google.com/drive/folders/1fRnyMOD7-_HOcwWVS5wMVYlkc_NGO0Mr?usp=drive_link
+## 🎥 Demo Video
+[Click here to watch the demo](https://drive.google.com/drive/folders/1fRnyMOD7-_HOcwWVS5wMVYlkc_NGO0Mr?usp=drive_link)
+
 ## 🚀 TLDR
 A multimodal AI-powered assistant that speaks your language, understands your needs, and simplifies every step of the loan journey - from eligibility checks to EMI reminders.
 
