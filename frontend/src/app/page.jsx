@@ -14,7 +14,10 @@ import {
     BookOpen,
 } from "lucide-react";
 import Image from "next/image";
-import demo from "@/assets/demoFinsaathi.png";
+import demo from "@/assets/imagex.png";
+import demo1 from "@/assets/image1.png";
+import demo2 from "@/assets/image2.png";
+import demo3 from "@/assets/image3.png";
 import logo from "@/assets/loansaathi.png";
 import bg from "@/assets/bg.jpg";
 import wqr from "@/assets/whatsapp-qr.png";
@@ -451,7 +454,7 @@ const HomePage = () => {
                                     </p>
                                 </div>
                                 <Image
-                                    src={demo}
+                                    src={demo1}
                                     alt="Document Verification"
                                     className="rounded-xl shadow-lg"
                                 />
@@ -460,7 +463,7 @@ const HomePage = () => {
                             {/* Third feature - Image on left */}
                             <div className="grid md:grid-cols-2 gap-8 items-center">
                                 <Image
-                                    src={demo}
+                                    src={demo3}
                                     alt="EMI Calculator"
                                     className="rounded-xl shadow-lg"
                                 />
