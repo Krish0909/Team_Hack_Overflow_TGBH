@@ -42,24 +42,16 @@ const PROJECT_FEATURES = {
         path: "/loanguard",
         description: "Analyze loan documents and get insights",
     },
-    loan_eligibility: {
-        path: "/dashboard/eligibility",
-        description: "Check loan eligibility and requirements",
-    },
-    loan_applications: {
-        path: "/dashboard/applications",
-        description: "View and manage loan applications",
-    },
     profile: {
-        path: "/dashboard/profile",
-        description: "View and update user profile",
+        path: "/dashboard/news",
+        description: "View and get the latest news",
     },
     document_analysis: {
-        path: "/loanguard",
+        path: "/dashboard/loanguard",
         description: "Analyze and understand loan documents",
     },
     emi_calculator: {
-        path: "/tools/emi-calculator",
+        path: "/dashboard/emiAnalysis",
         description: "Calculate EMI and loan payments",
     },
     support: {
@@ -322,7 +314,9 @@ export default function FloatingAssistant() {
         return voice || voices[0];
     };
 
-    const speakWithSarvam = async (text) => {
+    const speakWithSarvam = async (text, retryCount = 0) => {
+        if (!text || !isOpen) return;
+
         try {
             if (audioRef.current) {
                 audioRef.current.pause();
@@ -332,11 +326,11 @@ export default function FloatingAssistant() {
             setSpeaking(true);
             setIsPaused(false);
 
-            // Split text into chunks of max 500 characters
             const textChunks = splitTextForTTS(text);
 
-            // Process each chunk sequentially
             for (const chunk of textChunks) {
+                if (!isOpen) break;
+
                 if (isPaused) {
                     await new Promise(resolve => {
                         const checkPause = () => {
@@ -346,39 +340,33 @@ export default function FloatingAssistant() {
                         checkPause();
                     });
                 }
-                const response = await fetch(
-                    process.env.NEXT_PUBLIC_SARVAM_TTS_API_URL,
-                    {
-                        method: "POST",
-                        headers: {
-                            "api-subscription-key":
-                                process.env
-                                    .NEXT_PUBLIC_SARVAM_API_SUBSCRIPTION_KEY,
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            inputs: [chunk],
-                            target_language_code: language,
-                            speaker: SARVAM_SPEAKERS[language] || "meera",
-                            pitch: 0,
-                            pace: 1.0,
-                            loudness: 1.5,
-                            speech_sample_rate: 16000,
-                            enable_preprocessing: true,
-                            model: "bulbul:v1",
-                            eng_interpolation_wt: 0.5,
-                        }),
-                    }
-                );
 
-                if (!response.ok) throw new Error("TTS failed");
+                const response = await fetch(process.env.NEXT_PUBLIC_SARVAM_TTS_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'api-subscription-key': process.env.NEXT_PUBLIC_SARVAM_API_SUBSCRIPTION_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: [chunk],
+                        target_language_code: language,
+                        speaker: SARVAM_SPEAKERS[language] || "meera",
+                        pitch: 0,
+                        pace: 1.0,
+                        loudness: 1.5,
+                        speech_sample_rate: 16000,
+                        enable_preprocessing: true,
+                        model: "bulbul:v1",
+                        eng_interpolation_wt: 0.5
+                    })
+                });
+
+                if (!response.ok) throw new Error('TTS failed');
 
                 const data = await response.json();
                 if (data.audios?.[0]) {
                     await new Promise((resolve, reject) => {
-                        const audio = new Audio(
-                            `data:audio/wav;base64,${data.audios[0]}`
-                        );
+                        const audio = new Audio(`data:audio/wav;base64,${data.audios[0]}`);
                         audioRef.current = audio;
 
                         audio.onended = () => {
@@ -392,8 +380,11 @@ export default function FloatingAssistant() {
                 }
             }
         } catch (error) {
-            console.error("Sarvam TTS error:", error);
-            await fallbackTTS(text);
+            console.error('Sarvam TTS error:', error);
+            if (retryCount < 2) {
+                // Retry with fallback
+                await fallbackTTS(text);
+            }
         } finally {
             setSpeaking(false);
         }
@@ -451,8 +442,7 @@ export default function FloatingAssistant() {
 
     const handleNavigation = async (assistantResponse) => {
         if (assistantResponse.action === 'navigate' && assistantResponse.path) {
-            const currentLocation = window.location.pathname;
-            if (currentLocation !== assistantResponse.path) {
+            try {
                 // Add navigation message
                 setMessages(prev => [...prev, {
                     type: 'assistant',
@@ -460,22 +450,48 @@ export default function FloatingAssistant() {
                     suggestions: assistantResponse.suggestions || []
                 }]);
                 
-                // Immediate navigation for forced navigation
+                // Wait for the message to be added
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Speak the response
+                await speakWithSarvam(assistantResponse.response);
+                
+                // Navigate after speaking
                 if (assistantResponse.force_navigate) {
                     router.push(assistantResponse.path);
-                    setCurrentPath(assistantResponse.path);
                 } else {
-                    // Speak first, then navigate for non-forced
-                    await speakWithSarvam(assistantResponse.response);
-                    router.push(assistantResponse.path);
-                    setCurrentPath(assistantResponse.path);
+                    // Give user time to read/hear the response
+                    setTimeout(() => {
+                        router.push(assistantResponse.path);
+                    }, 1500);
                 }
+                
+                setCurrentPath(assistantResponse.path);
+            } catch (error) {
+                console.error('Navigation error:', error);
             }
         }
     };
 
+    // Add response tracking state
+    const responseProcessingRef = useRef(false);
+    const pendingResponseRef = useRef(null);
+
+    const VALID_ROUTES = [
+        '/dashboard',
+        '/dashboard/loanBuddy',
+        '/dashboard/loanguard',
+        '/dashboard/emiAnalysis'
+    ];
+
+    // Modify handleUserInput to handle race conditions
     const handleUserInput = async (text) => {
         if (!text.trim()) return;
+        
+        if (responseProcessingRef.current) {
+            pendingResponseRef.current = text;
+            return;
+        }
         
         setMessages(prev => [...prev, { 
             type: 'user', 
@@ -483,55 +499,99 @@ export default function FloatingAssistant() {
         }]);
         setInputText('');
         setProcessing(true);
-    
+        responseProcessingRef.current = true;
+
         try {
             const response = await fetch('http://localhost:5000/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
                 body: JSON.stringify({
                     message: text,
                     language,
-                    clerk_id: user?.id, // Add clerk_id to request
-                    currentPath
+                    clerk_id: user?.id,
+                    currentPath: window.location.pathname,
+                    previousMessages: messages.slice(-3) // Send context of last 3 messages
                 })
             });
-    
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
             const data = await response.json();
             
-            if (data.success && data.data) {
-                const assistantResponse = JSON.parse(data.data);
-                
-                // Handle navigation or stay response
-                if (assistantResponse.action === 'navigate') {
-                    await handleNavigation(assistantResponse);
+            if (!data || !data.success) throw new Error('Invalid response format');
+
+            let assistantResponse = JSON.parse(data.data);
+
+            // Validate navigation path
+            if (assistantResponse.action === 'navigate') {
+                if (!VALID_ROUTES.includes(assistantResponse.path)) {
+                    assistantResponse.action = 'stay';
+                    assistantResponse.response = 'I can only help you navigate within the main dashboard sections.';
                 } else {
+                    // Handle valid navigation
                     setMessages(prev => [...prev, {
                         type: 'assistant',
                         content: assistantResponse.response,
                         suggestions: assistantResponse.suggestions || []
                     }]);
                     await speakWithSarvam(assistantResponse.response);
+                    
+                    setTimeout(() => {
+                        router.push(assistantResponse.path);
+                    }, 500);
                 }
+            } else {
+                // Regular response
+                setMessages(prev => [...prev, {
+                    type: 'assistant',
+                    content: assistantResponse.response,
+                    suggestions: assistantResponse.suggestions || []
+                }]);
+                await speakWithSarvam(assistantResponse.response);
             }
+
         } catch (error) {
             console.error('Error:', error);
-            const errorMessage =
-                language === "hi-IN"
-                    ? "क्षमा करें, मुझे एक त्रुटि मिली। कृपया पुनः प्रयास करें।"
-                    : "Sorry, I encountered an error. Please try again.";
+            const errorMessage = language === "hi-IN"
+                ? "क्षमा करें, एक त्रुटि हुई। कृपया पुनः प्रयास करें।"
+                : "Sorry, I encountered an error. Please try again.";
 
-            setMessages((prev) => [
-                ...prev,
-                {
-                    type: "error",
-                    content: errorMessage,
-                },
-            ]);
+            setMessages(prev => [...prev, {
+                type: "error",
+                content: errorMessage,
+            }]);
             await speakWithSarvam(errorMessage);
         } finally {
             setProcessing(false);
+            responseProcessingRef.current = false;
+
+            if (pendingResponseRef.current) {
+                const pendingText = pendingResponseRef.current;
+                pendingResponseRef.current = null;
+                handleUserInput(pendingText);
+            }
         }
     };
+
+    // Modify useEffect for messages scroll
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 100);
+        }
+    }, [messages]);
+
+    // Add cleanup for message processing
+    useEffect(() => {
+        return () => {
+            responseProcessingRef.current = false;
+            pendingResponseRef.current = null;
+        };
+    }, []);
 
     const handleKeyPress = (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -584,11 +644,39 @@ export default function FloatingAssistant() {
         </div>
     );
 
+    // Add click outside handler
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            const isAssistantClick = event.target.closest('[data-floating-assistant]');
+            const isAssistantButton = event.target.closest('[data-assistant-button]');
+            
+            if (!isAssistantClick && !isAssistantButton && isOpen) {
+                handleClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    // Cleanup effect for audio
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+            window.speechSynthesis.cancel();
+            setSpeaking(false);
+        };
+    }, []);
+
     return (
         <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
+                        data-floating-assistant
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -688,6 +776,7 @@ export default function FloatingAssistant() {
             </AnimatePresence>
 
             <motion.button
+                data-assistant-button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(!isOpen)}
