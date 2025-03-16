@@ -1,4 +1,5 @@
-import { Suspense } from "react";
+'use client';
+import { Suspense, useState, useEffect } from "react";
 import {
     Clock,
     Link as LinkIcon,
@@ -12,6 +13,8 @@ import {
     CardContent,
     CardFooter,
 } from "@/components/ui/card";
+import { useLanguage } from '@/lib/languageContext';
+import { translateBatch, translateText } from '@/lib/translation';
 
 const ScrollArea = ({ children, className = "" }) => (
     <div className={`overflow-auto ${className}`}>{children}</div>
@@ -24,16 +27,59 @@ const ErrorMessage = ({ message }) => (
     </div>
 );
 
-async function getNews() {
-    const res = await fetch("http://localhost:3000/api/news", {
-        next: { revalidate: 300 },
-    });
-    if (!res.ok) throw new Error("Failed to fetch news");
-    return res.json();
-}
+export default function NewsFeed() {
+    const { language } = useLanguage();
+    const [translatedNews, setTranslatedNews] = useState([]);
+    const [translations, setTranslations] = useState({});
+    const [loading, setLoading] = useState(true);
 
-export default async function NewsFeed() {
-    const { news } = await getNews();
+    useEffect(() => {
+        const translateContent = async () => {
+            // First translate static content
+            const staticContent = await translateBatch([
+                'Loan News Feed',
+                'Read full article',
+                'Loading...',
+                'Failed to fetch news'
+            ], language);
+
+            setTranslations({
+                title: staticContent[0],
+                readMore: staticContent[1],
+                loading: staticContent[2],
+                error: staticContent[3]
+            });
+
+            // Then fetch and translate news
+            try {
+                const response = await fetch("http://localhost:3000/api/news", {
+                    next: { revalidate: 300 },
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch news");
+                const { news } = await response.json();
+
+                // Translate news content
+                const translatedItems = await Promise.all(news.map(async (article) => ({
+                    ...article,
+                    title: await translateText(article.title, language),
+                    description: await translateText(article.description, language),
+                })));
+
+                setTranslatedNews(translatedItems);
+            } catch (error) {
+                console.error('Error fetching news:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        translateContent();
+    }, [language]);
+
+    if (loading) {
+        return <div>{translations.loading}</div>;
+    }
 
     return (
         <div className="container mx-auto p-6">
@@ -41,15 +87,15 @@ export default async function NewsFeed() {
                 <div className="flex items-center gap-2">
                     <Newspaper className="h-6 w-6 text-gray-700" />
                     <h1 className="text-3xl font-bold text-gray-900">
-                        Loan News Feed
+                        {translations.title}
                     </h1>
                 </div>
             </div>
 
             <ScrollArea className="h-[800px] rounded-md border border-gray-200 p-4 bg-gray-50">
-                <Suspense fallback={<div>Loading...</div>}>
+                <Suspense fallback={<div>{translations.loading}</div>}>
                     <div className="grid gap-4">
-                        {news.map((article, index) => (
+                        {translatedNews.map((article, index) => (
                             <Card key={index} className="overflow-hidden">
                                 <CardHeader className="p-6">
                                     <div className="flex justify-between items-start gap-4">
@@ -83,7 +129,7 @@ export default async function NewsFeed() {
                                         className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
                                     >
                                         <LinkIcon className="h-4 w-4" />
-                                        Read full article
+                                        {translations.readMore}
                                     </a>
                                 </CardFooter>
                             </Card>

@@ -7,11 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from '@supabase/supabase-js';
 import { toast } from "sonner";
+import { useLanguage } from '@/lib/languageContext';
+import { translateBatch } from '@/lib/translation';
 
 export default function ProfilePage() {
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
+  const { language } = useLanguage();
+  const [translations, setTranslations] = useState({});
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -21,6 +25,32 @@ export default function ProfilePage() {
   useEffect(() => {
     fetchUserData();
   }, [user]);
+
+  useEffect(() => {
+    const translateContent = async () => {
+      const translated = await translateBatch([
+        'Profile Settings',
+        'Personal Information',
+        'Financial Information',
+        'Save Changes',
+        'Loading...',
+        'Profile updated successfully',
+        'Failed to update profile'
+      ], language);
+
+      setTranslations({
+        title: translated[0],
+        personalInfo: translated[1],
+        financialInfo: translated[2],
+        saveButton: translated[3],
+        loading: translated[4],
+        successMsg: translated[5],
+        errorMsg: translated[6]
+      });
+    };
+
+    translateContent();
+  }, [language]);
 
   const fetchUserData = async () => {
     try {
@@ -58,26 +88,26 @@ export default function ProfilePage() {
         })
       ]);
 
-      toast.success("Profile updated successfully");
+      toast.success(translations.successMsg);
       fetchUserData();
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error("Failed to update profile");
+      toast.error(translations.errorMsg);
     }
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>{translations.loading}</div>;
   }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Profile Settings</h1>
+      <h1 className="text-3xl font-bold">{translations.title}</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>{translations.personalInfo}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Add form fields for personal information */}
@@ -86,7 +116,7 @@ export default function ProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Financial Information</CardTitle>
+            <CardTitle>{translations.financialInfo}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Add form fields for financial information */}

@@ -28,7 +28,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
 import Image from "next/image";
 import loanSaathiLogo from "@/assets/loansaathi.png";
-import { useLanguage } from "@/lib/languageContext";
+import { useLanguage, SUPPORTED_LANGUAGES } from "@/lib/languageContext";
 import {
     Select,
     SelectTrigger,
@@ -47,37 +47,61 @@ export default function DashboardLayout({ children }) {
 
     const sidebarLinks = [
         {
-            title: "Overview",
+            title: {
+                'en-IN': 'Overview',
+                'hi-IN': 'अवलोकन',
+                // Add other languages...
+            },
             href: "/dashboard",
             icon: LayoutDashboard,
             color: "text-blue-500",
         },
         {
-            title: "Loan Assistant",
+            title: {
+                'en-IN': 'Loan Assistant',
+                'hi-IN': 'ऋण सहायक',
+                // Add other languages...
+            },
             href: "/dashboard/loanBuddy",
             icon: MessagesSquare,
             color: "text-green-500",
         },
         {
-            title: "Scan Documents",
-            href: "/dashboard/loangaurd",
+            title: {
+                'en-IN': 'Scan Documents',
+                'hi-IN': 'दस्तावेज़ स्कैन करें',
+                // Add other languages...
+            },
+            href: "/dashboard/loanguard",
             icon: ShieldAlert,
             color: "text-purple-500",
         },
         {
-            title: "EMI Analysis",
+            title: {
+                'en-IN': 'EMI Analysis',
+                'hi-IN': 'ईएमआई विश्लेषण',
+                // Add other languages...
+            },
             href: "/dashboard/emiAnalysis",
             icon: Calculator,
             color: "text-orange-500",
         },
         {
-          title: "Latest News",
-          href: "/dashboard/news",
-          icon: Newspaper,
-          color: "text-rose-500",
-      },
+            title: {
+                'en-IN': 'Latest News',
+                'hi-IN': 'ताज़ा खबर',
+                // Add other languages...
+            },
+            href: "/dashboard/news",
+            icon: Newspaper,
+            color: "text-rose-500",
+        },
         {
-            title: "Settings",
+            title: {
+                'en-IN': 'Settings',
+                'hi-IN': 'समायोजन',
+                // Add other languages...
+            },
             href: "/dashboard/settings",
             icon: Settings,
             color: "text-gray-500",
@@ -112,25 +136,41 @@ export default function DashboardLayout({ children }) {
         checkOnboardingStatus();
     }, [user, isLoaded, router]);
 
-    if (!isLoaded || isCheckingOnboarding) {
-        return <div>Loading...</div>;
-    }
+    useEffect(() => {
+        // Sync language on mount and changes
+        const savedLanguage = localStorage.getItem('preferred-language');
+        if (savedLanguage && savedLanguage !== language) {
+            setLanguage(savedLanguage);
+        }
+    }, []);
+
+    const handleLanguageChange = (value) => {
+        setLanguage(value);
+        localStorage.setItem('preferred-language', value);
+    };
 
     const languageSelector = (
         <Select
             value={language}
-            onValueChange={(value) => setLanguage(value, user.id)}
+            onValueChange={handleLanguageChange}
         >
             <SelectTrigger className="w-[180px]">
                 <Globe className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Language" />
+                <SelectValue placeholder={SUPPORTED_LANGUAGES[language]} />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="en-IN">English</SelectItem>
-                {/* Add other languages here when needed */}
+                {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
+                    <SelectItem key={code} value={code}>
+                        {name}
+                    </SelectItem>
+                ))}
             </SelectContent>
         </Select>
     );
+
+    if (!isLoaded || isCheckingOnboarding) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <ThemeProvider
@@ -169,7 +209,7 @@ export default function DashboardLayout({ children }) {
                                         className={`h-5 w-5 ${link.color} group-hover:scale-110 transition-transform`}
                                     />
                                     <span className="text-sm font-medium">
-                                        {link.title}
+                                        {link.title[language] || link.title['en-IN']}
                                     </span>
                                 </Link>
                             ))}
@@ -259,7 +299,7 @@ export default function DashboardLayout({ children }) {
                                                         className={`h-5 w-5 ${link.color} group-hover:scale-110 transition-transform`}
                                                     />
                                                     <span className="text-sm font-medium">
-                                                        {link.title}
+                                                        {link.title[language] || link.title['en-IN']}
                                                     </span>
                                                 </Link>
                                             ))}

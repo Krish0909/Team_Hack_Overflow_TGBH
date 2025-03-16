@@ -1,35 +1,41 @@
+'use client';
 import { Card } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { useLanguage } from '@/lib/languageContext';
+import { translateText } from '@/lib/translation';
+import { useState, useEffect } from 'react';
 
 export default function StatsCard({ title, value, type = "number", icon: Icon }) {
-  const formatValue = () => {
-    if (type === "currency") {
-      return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR'
-      }).format(value);
-    }
-    return value.toLocaleString();
-  };
+  const { language } = useLanguage();
+  const [translatedTitle, setTranslatedTitle] = useState(title);
+
+  useEffect(() => {
+    const translateTitle = async () => {
+      if (language !== 'en-IN') {
+        const translated = await translateText(title, language);
+        setTranslatedTitle(translated);
+      } else {
+        setTranslatedTitle(title);
+      }
+    };
+
+    translateTitle();
+  }, [title, language]);
+
+  const formattedValue = type === "currency" 
+    ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value)
+    : value.toLocaleString('en-IN');
 
   return (
-    <Card className="border-emerald-200/50 hover:border-emerald-300/50 transition-colors">
-      <motion.div
-        className="p-6 flex items-start gap-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="p-3 rounded-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/10">
-          <Icon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+    <Card className="p-4 border-emerald-200/50 bg-gradient-to-br from-background via-background to-emerald-500/5">
+      <div className="flex items-center gap-4">
+        <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-full">
+          <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
         </div>
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-          <p className="text-2xl font-bold mt-2 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-            {formatValue()}
-          </p>
+          <p className="text-sm text-muted-foreground">{translatedTitle}</p>
+          <p className="text-2xl font-semibold">{formattedValue}</p>
         </div>
-      </motion.div>
+      </div>
     </Card>
   );
 }

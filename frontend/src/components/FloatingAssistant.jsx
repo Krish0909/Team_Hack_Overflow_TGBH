@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X, Mic, MicOff, Send, Pause, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/lib/languageContext";
+import { useLanguage, SUPPORTED_LANGUAGES } from "@/lib/languageContext";
 import { useUser } from "@clerk/nextjs";
 
 const VOICE_FALLBACKS = {
@@ -86,6 +86,43 @@ const splitTextForTTS = (text) => {
     return chunks;
 };
 
+const translations = {
+    'assistantTitle': {
+        'en-IN': 'Personal Assistant',
+        'hi-IN': 'फिनसाथी सहायक',
+        'bn-IN': 'ফিনসাথী সহায়ক',
+        'ta-IN': 'ஃபின்சாதி உதவியாளர்',
+        'te-IN': 'ఫిన్సాథి సహాయకుడు',
+        'mr-IN': 'फिनसाथी सहाय्यक',
+        'gu-IN': 'ફિનસાથી સહાયક',
+        'kn-IN': 'ಫಿನ್ಸಾಥಿ ಸಹಾಯಕ',
+        'ml-IN': 'ഫിൻസാഥി സഹായി',
+        'pa-IN': 'ਫਿਨਸਾਥੀ ਸਹਾਇਕ'
+    },
+    'typingPlaceholder': {
+        'en-IN': 'Type your message...',
+        'hi-IN': 'अपना संदेश टाइप करें...',
+        'bn-IN': 'আপনার বার্তা টাইপ করুন...',
+        'ta-IN': 'உங்கள் செய்தியை தட்டச்சு செய்யவும்...',
+        'te-IN': 'మీ సందేశాన్ని టైప్ చేయండి...',
+        'mr-IN': 'तुमचा संदेश टाइप करा...',
+        'gu-IN': 'તમારો સંદેશ ટાઇપ કરો...',
+        'kn-IN': 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಟೈಪ್ ಮಾಡಿ...',
+        'ml-IN': 'നിങ്ങളുടെ സന്ദേശം ടൈപ്പ് ചെയ്യുക...',
+        'pa-IN': 'ਆਪਣਾ ਸੁਨੇਹਾ ਟਾਈਪ ਕਰੋ...'
+    },
+    'listeningText': {
+        'en-IN': 'Listening...',
+        'hi-IN': 'सुन रहा हूं...',
+        // Add other languages...
+    },
+    'speakingText': {
+        'en-IN': 'Speaking...',
+        'hi-IN': 'बोल रहा हूं...',
+        // Add other languages...
+    }
+};
+
 export default function FloatingAssistant() {
     const [isOpen, setIsOpen] = useState(false);
     const [isListening, setIsListening] = useState(false);
@@ -95,7 +132,7 @@ export default function FloatingAssistant() {
     const recognitionRef = useRef(null);
     const messagesEndRef = useRef(null);
     const router = useRouter();
-    const { t, language } = useLanguage();
+    const { t, language, setLanguage } = useLanguage();
     const { user } = useUser();
     const [recording, setRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
@@ -104,6 +141,12 @@ export default function FloatingAssistant() {
     const audioRef = useRef(null);
     const [currentPath, setCurrentPath] = useState("");
     const [isPaused, setIsPaused] = useState(false);
+    
+    // Replace useTranslation with direct translations
+    const assistantTitle = translations.assistantTitle[language] || translations.assistantTitle['en-IN'];
+    const typingPlaceholder = translations.typingPlaceholder[language] || translations.typingPlaceholder['en-IN'];
+    const listeningText = translations.listeningText[language] || translations.listeningText['en-IN'];
+    const speakingText = translations.speakingText[language] || translations.speakingText['en-IN'];
 
     // Initialize speech recognition
     useEffect(() => {
@@ -507,6 +550,40 @@ export default function FloatingAssistant() {
         setIsOpen(false);
     };
 
+    const chatHeader = (
+        <div className="p-4 border-b flex justify-between items-center bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-lg">
+            <div className="flex items-center gap-2">
+                <Bot className={`h-5 w-5 ${speaking ? "animate-pulse" : ""}`} />
+                <h3 className="font-medium">{assistantTitle}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+                {/* Add language selector */}
+                <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="bg-transparent text-white text-sm border border-white/20 rounded px-2 py-1"
+                >
+                    {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
+                        <option key={code} value={code} className="text-gray-900">
+                            {name}
+                        </option>
+                    ))}
+                </select>
+                <button onClick={() => setIsOpen(false)} className="hover:bg-white/10 p-1 rounded-full transition-colors">
+                    <X className="h-5 w-5" />
+                </button>
+            </div>
+        </div>
+    );
+
+    const inputPlaceholder = isListening ? listeningText : typingPlaceholder;
+
+    const speakingIndicator = speaking && (
+        <div className="absolute left-4 -top-8 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+            {speakingText}
+        </div>
+    );
+
     return (
         <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
             <AnimatePresence>
@@ -519,29 +596,7 @@ export default function FloatingAssistant() {
                         className="mb-4 bg-card rounded-lg shadow-2xl w-96"
                     >
                         {/* Chat Header */}
-                        <div className="p-4 border-b flex justify-between items-center bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-lg">
-                            <div className="flex items-center gap-2">
-                                <Bot className={`h-5 w-5 ${speaking ? "animate-pulse" : ""}`} />
-                                <h3 className="font-medium">FinSaathi Assistant</h3>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {speaking && (
-                                    <button
-                                        onClick={togglePause}
-                                        className="p-1 hover:bg-white/10 rounded-full transition-colors"
-                                    >
-                                        {isPaused ? (
-                                            <Play className="h-4 w-4" />
-                                        ) : (
-                                            <Pause className="h-4 w-4" />
-                                        )}
-                                    </button>
-                                )}
-                                <button onClick={() => setIsOpen(false)} className="hover:bg-white/10 p-1 rounded-full transition-colors">
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-                        </div>
+                        {chatHeader}
 
                         {/* Messages Area */}
                         <div className="h-96 overflow-y-auto p-4 space-y-4">
@@ -592,11 +647,7 @@ export default function FloatingAssistant() {
                         {/* Input Area */}
                         <div className="p-4 border-t">
                             <div className="flex items-center gap-2">
-                                {speaking && (
-                                    <div className="absolute left-4 -top-8 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                                        Speaking...
-                                    </div>
-                                )}
+                                {speakingIndicator}
                                 <button
                                     onClick={toggleListening}
                                     disabled={processing}
@@ -619,11 +670,7 @@ export default function FloatingAssistant() {
                                         setInputText(e.target.value)
                                     }
                                     onKeyPress={handleKeyPress}
-                                    placeholder={
-                                        isListening
-                                            ? "Listening..."
-                                            : "Type a message..."
-                                    }
+                                    placeholder={inputPlaceholder}
                                     disabled={isListening}
                                     className="flex-1 rounded-full px-4 py-2 bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
                                 />

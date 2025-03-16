@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from "@clerk/nextjs";
 import { supabase } from '@/lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,18 +15,33 @@ import { CalendarIcon, IndianRupee } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLanguage } from '@/lib/languageContext';
+import { translateBatch } from '@/lib/translation';
 
-const loanTypes = [
-  'Personal Loan',
-  'Home Loan',
-  'Car Loan',
-  'Education Loan',
-  'Business Loan',
-  'Gold Loan'
-];
+const LOAN_TYPES = {
+    'en-IN': [
+        'Personal Loan',
+        'Home Loan',
+        'Car Loan',
+        'Education Loan',
+        'Business Loan',
+        'Gold Loan'
+    ],
+    'hi-IN': [
+        'व्यक्तिगत ऋण',
+        'गृह ऋण',
+        'कार ऋण',
+        'शिक्षा ऋण',
+        'व्यवसाय ऋण',
+        'स्वर्ण ऋण'
+    ],
+    // Add other languages...
+};
 
 export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
   const { user } = useUser();
+  const { language } = useLanguage();
+  const [translations, setTranslations] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     loan_type: '',
@@ -40,6 +55,40 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
     loan_purpose: '',
     amount_paid: '0', // Add this field
   });
+
+  useEffect(() => {
+    const translateContent = async () => {
+      const translated = await translateBatch([
+        'Add New Loan',
+        'Loan Details',
+        'Loan Type',
+        'Loan Amount',
+        'Interest Rate',
+        'Tenure (months)',
+        'Payment Date',
+        'Lender Name',
+        'Purpose',
+        'Cancel',
+        'Add Loan'
+      ], language);
+
+      setTranslations({
+        title: translated[0],
+        details: translated[1],
+        type: translated[2],
+        amount: translated[3],
+        interest: translated[4],
+        tenure: translated[5],
+        paymentDate: translated[6],
+        lender: translated[7],
+        purpose: translated[8],
+        cancel: translated[9],
+        submit: translated[10]
+      });
+    };
+
+    translateContent();
+  }, [language]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -104,18 +153,20 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
     return '0';
   };
 
+  const currentLoanTypes = LOAN_TYPES[language] || LOAN_TYPES['en-IN'];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] h-[95vh]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Add New Loan</DialogTitle>
+          <DialogTitle className="text-2xl">{translations.title}</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="h-full pr-4 -mr-4">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <Label>Loan Type</Label>
+                <Label>{translations.type}</Label>
                 <Select
                   value={formData.loan_type}
                   onValueChange={(value) => setFormData({...formData, loan_type: value})}
@@ -124,7 +175,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
                     <SelectValue placeholder="Select your loan type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {loanTypes.map(type => (
+                    {currentLoanTypes.map(type => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
                   </SelectContent>
@@ -133,7 +184,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Loan Amount (₹)</Label>
+                  <Label>{translations.amount} (₹)</Label>
                   <div className="relative">
                     <IndianRupee className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -148,7 +199,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
                 </div>
                 
                 <div>
-                  <Label>Interest Rate (%)</Label>
+                  <Label>{translations.interest} (%)</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -162,7 +213,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Loan Tenure (Months)</Label>
+                  <Label>{translations.tenure}</Label>
                   <Input
                     type="number"
                     placeholder="Enter tenure in months"
@@ -173,7 +224,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
                 </div>
 
                 <div>
-                  <Label>EMI Date</Label>
+                  <Label>{translations.paymentDate}</Label>
                   <Select
                     value={formData.payment_date}
                     onValueChange={(value) => setFormData({...formData, payment_date: value})}
@@ -194,7 +245,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Lender Name</Label>
+                  <Label>{translations.lender}</Label>
                   <Input
                     placeholder="Enter bank or lender name"
                     value={formData.lender_name}
@@ -215,7 +266,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
               </div>
 
               <div>
-                <Label>Loan Purpose</Label>
+                <Label>{translations.purpose}</Label>
                 <Input
                   placeholder="Brief description of loan purpose"
                   value={formData.loan_purpose}
@@ -302,7 +353,7 @@ export default function AddLoanForm({ open, onOpenChange, onSuccess }) {
 
         <div className="flex justify-end pt-4 border-t mt-4">
           <Button type="submit" disabled={isSubmitting} onClick={handleSubmit}>
-            {isSubmitting ? 'Adding...' : 'Add Loan'}
+            {isSubmitting ? 'Adding...' : translations.submit}
           </Button>
         </div>
       </DialogContent>

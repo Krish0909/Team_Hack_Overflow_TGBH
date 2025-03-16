@@ -9,6 +9,9 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSearchParams } from 'next/navigation';
+import { useLanguage } from '@/lib/languageContext';
+import { useTranslation } from '@/hooks/useTranslation';
+import { translateBatch } from '@/lib/translation';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import LoansList from '@/components/dashboard/LoansList';
@@ -29,20 +32,92 @@ export default function DashboardPage() {
   });
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [translations, setTranslations] = useState({
+    overviewTitle: '',
+    dashboardDesc: '',
+    addLoanText: '',
+    notificationsTitle: '',
+    noNotifications: '',
+    totalLoan: '',
+    monthlyEMI: '',
+    activeLoans: '',
+    completedLoans: ''
+  });
 
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'overview';
   const selectedDate = searchParams.get('date') ? new Date(searchParams.get('date')) : null;
+
+  const { language } = useLanguage();
+
+  const translatePageContent = async (language) => {
+    setLoading(true);
+    try {
+      // Translate static content
+      const staticContent = await translateBatch([
+        'Overview',
+        'Manage your loans and track EMI payments',
+        'Add New Loan',
+        'Notifications',
+        'No new notifications',
+        'Total Loan Amount',
+        'Monthly EMI',
+        'Active Loans',
+        'Completed Loans'
+      ], language);
+
+      // Update translations
+      setTranslations({
+        overviewTitle: staticContent[0],
+        dashboardDesc: staticContent[1],
+        addLoanText: staticContent[2],
+        notificationsTitle: staticContent[3],
+        noNotifications: staticContent[4],
+        totalLoan: staticContent[5],
+        monthlyEMI: staticContent[6],
+        activeLoans: staticContent[7],
+        completedLoans: staticContent[8]
+      });
+
+      // Translate loans data
+      if (loans.length > 0) {
+        const translatedLoans = await translateBatch(loans, language);
+        setLoans(translatedLoans);
+      }
+
+      // Translate notifications
+      if (notifications.length > 0) {
+        const translatedNotifs = await translateBatch(notifications, language);
+        setNotifications(translatedNotifs);
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
       fetchLoans();
       fetchNotifications();
     }
-  }, [user]);
+  }, [user, language]);
+
+  useEffect(() => {
+    translatePageContent(language);
+  }, [language]);
+
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    fetchLoans();
+    fetchNotifications();
+  };
 
   const fetchLoans = async () => {
     try {
+      // First fetch loans data
       const { data, error } = await supabase
         .from('loans')
         .select('*')
@@ -50,10 +125,20 @@ export default function DashboardPage() {
 
       if (error) throw error;
 
-      setLoans(data);
-      calculateStats(data);
+      // Translate if needed
+      const translatedLoans = language === 'en-IN' ? data : await Promise.all(
+        data.map(async (loan) => ({
+          ...loan,
+          loan_type: await translateText(loan.loan_type, language),
+          loan_purpose: await translateText(loan.loan_purpose, language)
+        }))
+      );
+
+      setLoans(translatedLoans);
+      calculateStats(translatedLoans);
     } catch (error) {
       console.error('Error fetching loans:', error);
+      toast.error("Failed to fetch loans data");
     }
   };
 
@@ -65,10 +150,12 @@ export default function DashboardPage() {
         .eq('clerk_id', user.id)
         .eq('loan_status', 'active');
 
+      if (!loans) return;
+
       const today = new Date();
       const notifs = [];
 
-      loans?.forEach(loan => {
+      loans.forEach(loan => {
         const emiDate = new Date(today.getFullYear(), today.getMonth(), loan.payment_date);
         const daysUntilDue = Math.ceil((emiDate - today) / (1000 * 60 * 60 * 24));
 
@@ -76,8 +163,10 @@ export default function DashboardPage() {
           notifs.push({
             id: `upcoming-${loan.id}`,
             type: 'upcoming',
-            title: 'Upcoming EMI Payment',
-            message: `${loan.loan_type} EMI of ₹${loan.emi_amount.toLocaleString('en-IN')} is due in ${daysUntilDue} days`,
+            title: language === 'hi-IN' ? 'आगामी ईएमआई भुगतान' : 'Upcoming EMI Payment',
+            message: language === 'hi-IN' 
+              ? `${loan.loan_type} ईएमआई ₹${loan.emi_amount.toLocaleString('en-IN')} ${daysUntilDue} दिनों में देय है`
+              : `${loan.loan_type} EMI of ₹${loan.emi_amount.toLocaleString('en-IN')} is due in ${daysUntilDue} days`,
             icon: Calendar,
             color: 'bg-blue-100 text-blue-600'
           });
@@ -87,8 +176,10 @@ export default function DashboardPage() {
           notifs.push({
             id: `overdue-${loan.id}`,
             type: 'warning',
-            title: 'Payment Overdue',
-            message: `${loan.loan_type} EMI of ₹${loan.emi_amount.toLocaleString('en-IN')} was due ${Math.abs(daysUntilDue)} days ago`,
+            title: language === 'hi-IN' ? 'बकाया भुगतान' : 'Payment Overdue',
+            message: language === 'hi-IN'
+              ? `${loan.loan_type} ईएमआई ₹${loan.emi_amount.toLocaleString('en-IN')} ${Math.abs(daysUntilDue)} दिन पहले देय था`
+              : `${loan.loan_type} EMI of ₹${loan.emi_amount.toLocaleString('en-IN')} was due ${Math.abs(daysUntilDue)} days ago`,
             icon: AlertTriangle,
             color: 'bg-red-100 text-red-600'
           });
@@ -98,6 +189,7 @@ export default function DashboardPage() {
       setNotifications(notifs);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      toast.error("Failed to fetch notifications");
     }
   };
 
@@ -119,16 +211,16 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-6">
-      {/* Updated Header */}
+      {/* Updated Header with translations */}
       <div className="relative overflow-hidden rounded-lg border bg-card p-4 mb-6">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" />
         <div className="flex justify-between items-center relative">
           <div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Overview
+              {translations.overviewTitle}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Manage your loans and track EMI payments
+              {translations.dashboardDesc}
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -149,11 +241,11 @@ export default function DashboardPage() {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Notifications</SheetTitle>
+                  <SheetTitle>{translations.notificationsTitle}</SheetTitle>
                 </SheetHeader>
                 <div className="mt-4 space-y-4">
                   {notifications.length === 0 ? (
-                    <p className="text-center text-muted-foreground">No new notifications</p>
+                    <p className="text-center text-muted-foreground">{translations.noNotifications}</p>
                   ) : (
                     notifications.map((notification) => (
                       <div
@@ -178,70 +270,58 @@ export default function DashboardPage() {
               className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add New Loan
+              {translations.addLoanText}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Updated Stats Grid */}
+      {/* Updated Stats Grid with translations */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatsCard
-          title="Total Loan Amount"
+          title={translations.totalLoan}
           value={stats.totalLoanAmount}
           type="currency"
           icon={PieChart}
         />
         <StatsCard
-          title="Monthly EMI"
+          title={translations.monthlyEMI}
           value={stats.totalEMI}
           type="currency"
           icon={CalendarClock}
         />
         <StatsCard
-          title="Active Loans"
+          title={translations.activeLoans}
           value={stats.activeLoans}
           type="number"
           icon={ListTodo}
         />
         <StatsCard
-          title="Completed Loans"
+          title={translations.completedLoans}
           value={stats.completedLoans}
           type="number"
           icon={LayoutDashboard}
         />
       </div>
 
-      {/* Updated Tabs */}
+      {/* Updated Tabs with translations */}
       <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-100/50 dark:bg-emerald-900/50 p-1">
-          <TabsTrigger 
-            value="overview" 
-            className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
-          >
+          <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
             <LayoutDashboard className="h-4 w-4 mr-2" />
-            Overview
+            {translations.overviewTitle}
           </TabsTrigger>
-          <TabsTrigger 
-            value="loans" 
-            className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
-          >
+          <TabsTrigger value="loans" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
             <ListTodo className="h-4 w-4 mr-2" />
-            Loans
+            {translations.loans}
           </TabsTrigger>
-          <TabsTrigger 
-            value="analytics" 
-            className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
-          >
+          <TabsTrigger value="analytics" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
             <PieChart className="h-4 w-4 mr-2" />
-            Analytics
+            {translations.analytics}
           </TabsTrigger>
-          <TabsTrigger 
-            value="calendar" 
-            className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
-          >
+          <TabsTrigger value="calendar" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
             <CalendarClock className="h-4 w-4 mr-2" />
-            Calendar
+            {translations.calendar}
           </TabsTrigger>
         </TabsList>
 

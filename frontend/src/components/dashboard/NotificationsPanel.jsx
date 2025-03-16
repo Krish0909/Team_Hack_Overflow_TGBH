@@ -9,11 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from "@/lib/utils";
+import { useLanguage } from '@/lib/languageContext';
+import { translateBatch } from '@/lib/translation';
 
 export default function NotificationsPanel() {
   const { user } = useUser();
+  const { language } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [translations, setTranslations] = useState({});
+  const [translatedNotifications, setTranslatedNotifications] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -72,6 +77,45 @@ export default function NotificationsPanel() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const translateContent = async () => {
+      const translated = await translateBatch([
+        'Notifications',
+        'No new notifications',
+        'View all',
+        'Mark all as read'
+      ], language);
+
+      setTranslations({
+        title: translated[0],
+        noNotifications: translated[1],
+        viewAll: translated[2],
+        markRead: translated[3]
+      });
+    };
+
+    translateContent();
+  }, [language]);
+
+  useEffect(() => {
+    const translateNotifications = async () => {
+      if (!notifications.length) return;
+      
+      const translatedItems = await translateBatch(
+        notifications.map(n => ({ title: n.title, message: n.message })),
+        language
+      );
+      
+      setTranslatedNotifications(notifications.map((n, i) => ({
+        ...n,
+        title: translatedItems[i].title,
+        message: translatedItems[i].message
+      })));
+    };
+
+    translateNotifications();
+  }, [notifications, language]);
 
   const handleNotificationClick = (notification) => {
     const matches = notification.message.match(/due in (\d+) days|due (\d+) days ago/);

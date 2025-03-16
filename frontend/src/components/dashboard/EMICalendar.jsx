@@ -10,8 +10,44 @@ import { toast } from "sonner";
 import { Check, CheckCircle2, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from '@/lib/languageContext';
+import { translateBatch } from '@/lib/translation';
+
+const CALENDAR_TRANSLATIONS = {
+  'en-IN': {
+    title: 'EMI Calendar',
+    events: 'Events for',
+    upcoming: 'Upcoming EMI',
+    dueToday: 'Due Today',
+    overdue: 'Overdue',
+    paid: 'Paid',
+    noEmis: 'No EMIs due',
+    paymentDue: 'Payment Due',
+    markAsPaid: 'Mark as Paid',
+    paidOn: 'Paid on',
+    mode: 'Mode',
+    ref: 'Reference'
+  },
+  'hi-IN': {
+    title: 'ईएमआई कैलेंडर',
+    events: 'के लिए भुगतान',
+    upcoming: 'आगामी ईएमआई',
+    dueToday: 'आज देय',
+    overdue: 'बकाया',
+    paid: 'भुगतान किया',
+    noEmis: 'कोई ईएमआई देय नहीं',
+    paymentDue: 'भुगतान देय',
+    markAsPaid: 'भुगतान के रूप में चिह्नित करें',
+    paidOn: 'भुगतान दिनांक',
+    mode: 'भुगतान मोड',
+    ref: 'संदर्भ'
+  },
+  // Add other languages...
+};
 
 export default function EMICalendar({ loans, onUpdate, selectedDate: propSelectedDate }) {
+  const { language } = useLanguage();
+  const translations = CALENDAR_TRANSLATIONS[language] || CALENDAR_TRANSLATIONS['en-IN'];
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [payments, setPayments] = useState({});
@@ -111,13 +147,13 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarClock className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            EMI Calendar
+            {translations.title || 'EMI Calendar'}
           </div>
           <Badge 
             variant="outline" 
             className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
           >
-            {events.filter(e => !e.isPaid).length} Pending EMIs
+            {events.filter(e => !e.isPaid).length} {translations.paymentDue || 'Pending EMIs'}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -209,26 +245,26 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
               <div className="mt-4 flex flex-wrap gap-3 justify-center text-sm">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span>Upcoming EMI</span>
+                  <span>{translations.paymentDue || 'Upcoming EMI'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                  <span>Due Today</span>
+                  <span>{translations.paymentDue || 'Due Today'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-red-500" />
-                  <span>Overdue</span>
+                  <span>{translations.overdue || 'Overdue'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-green-500" />
-                  <span>Paid</span>
+                  <span>{translations.paid || 'Paid'}</span>
                 </div>
               </div>
             </Card>
           </div>
           <Card className="p-4">
             <h3 className="font-medium mb-4">
-              Events for {format(selectedDate || new Date(), "MMMM d, yyyy")}
+              {translations.title || 'Events for'} {format(selectedDate || new Date(), "MMMM d, yyyy")}
             </h3>
             <ScrollArea className="h-[300px] pr-4">
               <div className="space-y-4">
@@ -256,9 +292,9 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
                             event.isPast ? 'destructive' :
                             event.isToday ? 'warning' : 'default'
                           }>
-                            {event.isPaid ? 'Paid' :
-                             event.isPast ? 'Overdue' :
-                             event.isToday ? 'Due Today' : 'Upcoming'}
+                            {event.isPaid ? translations.paid || 'Paid' :
+                             event.isPast ? translations.overdue || 'Overdue' :
+                             event.isToday ? translations.paymentDue || 'Due Today' : translations.paymentDue || 'Upcoming'}
                           </Badge>
                         </div>
                         {!event.isPaid && (
@@ -268,15 +304,15 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
                             onClick={() => markAsPaid(event)}
                           >
                             <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Mark as Paid
+                            {translations.paid || 'Mark as Paid'}
                           </Button>
                         )}
                         {event.isPaid && (
                           <div className="mt-2 text-sm text-muted-foreground">
-                            <p>Paid on: {format(new Date(payments[`${event.loan.id}-${format(event.date, 'yyyy-MM-dd')}`].created_at), 'dd MMM yyyy')}</p>
-                            <p>Mode: {payments[`${event.loan.id}-${format(event.date, 'yyyy-MM-dd')}`].payment_mode}</p>
+                            <p>{translations.paid || 'Paid on'}: {format(new Date(payments[`${event.loan.id}-${format(event.date, 'yyyy-MM-dd')}`].created_at), 'dd MMM yyyy')}</p>
+                            <p>{translations.paid || 'Mode'}: {payments[`${event.loan.id}-${format(event.date, 'yyyy-MM-dd')}`].payment_mode}</p>
                             {payments[`${event.loan.id}-${format(event.date, 'yyyy-MM-dd')}`].transaction_reference && (
-                              <p>Ref: {payments[`${event.loan.id}-${format(event.date, 'yyyy-MM-dd')}`].transaction_reference}</p>
+                              <p>{translations.paid || 'Ref'}: {payments[`${event.loan.id}-${format(event.date, 'yyyy-MM-dd')}`].transaction_reference}</p>
                             )}
                           </div>
                         )}
@@ -285,7 +321,7 @@ export default function EMICalendar({ loans, onUpdate, selectedDate: propSelecte
                   ))
                 ) : (
                   <div className="text-center text-muted-foreground py-8">
-                    No EMIs due on this date
+                    {translations.noEmis || 'No EMIs due on this date'}
                   </div>
                 )}
               </div>

@@ -48,6 +48,7 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import remarkGfm from 'remark-gfm';
+import { translateBatch } from '@/lib/translation';
 
 export default function EMIAnalysisPage() {
     const { userId } = useAuth();
@@ -64,6 +65,7 @@ export default function EMIAnalysisPage() {
     });
     const [userLoans, setUserLoans] = useState([]);
     const [selectedLoan, setSelectedLoan] = useState(null);
+    const [translations, setTranslations] = useState({});
 
     useEffect(() => {
         const fetchUserLoans = async () => {
@@ -112,6 +114,44 @@ export default function EMIAnalysisPage() {
             fetchUserData();
         }
     }, [userId]);
+
+    useEffect(() => {
+        const translateContent = async () => {
+            const translated = await translateBatch([
+                'EMI Calculator',
+                'Loan Amount',
+                'Interest Rate',
+                'Loan Term',
+                'Monthly Income',
+                'Monthly Expenses',
+                'Extra Payment',
+                'Calculate',
+                'Download Report',
+                'Select Loan',
+                'Monthly EMI',
+                'Total Interest',
+                'Total Payment'
+            ], language);
+
+            setTranslations({
+                title: translated[0],
+                loanAmount: translated[1],
+                interestRate: translated[2],
+                loanTerm: translated[3],
+                monthlyIncome: translated[4],
+                monthlyExpenses: translated[5],
+                extraPayment: translated[6],
+                calculate: translated[7],
+                download: translated[8],
+                selectLoan: translated[9],
+                monthlyEmi: translated[10],
+                totalInterest: translated[11],
+                totalPayment: translated[12]
+            });
+        };
+
+        translateContent();
+    }, [language]);
 
     const calculateEMI = async () => {
         setLoading(true);
@@ -177,7 +217,7 @@ export default function EMIAnalysisPage() {
             <div className="relative overflow-hidden rounded-lg border bg-card p-4">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" />
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                    Smart Loan Analysis
+                    {translations.title}
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
                     Optimize your loan payments with AI-powered insights
@@ -187,7 +227,7 @@ export default function EMIAnalysisPage() {
             {userLoans.length > 0 && (
                 <Card className="mb-6">
                     <CardHeader>
-                        <CardTitle>Select Existing Loan</CardTitle>
+                        <CardTitle>{translations.selectLoan}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Select
@@ -228,7 +268,7 @@ export default function EMIAnalysisPage() {
                 <TabsContent value="insights">
                     <Card className="border-t-4 border-t-emerald-500">
                         <CardHeader>
-                            <CardTitle>Smart Loan Calculator</CardTitle>
+                            <CardTitle>{translations.title}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             {/* Existing form with enhanced styling */}
@@ -236,7 +276,7 @@ export default function EMIAnalysisPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">
-                                            Loan Amount
+                                            {translations.loanAmount}
                                         </label>
                                         <div className="relative">
                                             <IndianRupee className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -259,7 +299,7 @@ export default function EMIAnalysisPage() {
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">
-                                            Interest Rate (%)
+                                            {translations.interestRate}
                                         </label>
                                         <Input
                                             type="number"
@@ -279,7 +319,7 @@ export default function EMIAnalysisPage() {
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">
-                                            Loan Term (Years)
+                                            {translations.loanTerm}
                                         </label>
                                         <Input
                                             type="number"
@@ -298,7 +338,7 @@ export default function EMIAnalysisPage() {
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">
-                                            Monthly Salary
+                                            {translations.monthlyIncome}
                                         </label>
                                         <div className="relative">
                                             <IndianRupee className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -321,7 +361,7 @@ export default function EMIAnalysisPage() {
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">
-                                            Monthly Expenses
+                                            {translations.monthlyExpenses}
                                         </label>
                                         <div className="relative">
                                             <IndianRupee className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -346,7 +386,7 @@ export default function EMIAnalysisPage() {
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">
-                                            Extra Monthly Payment (Optional)
+                                            {translations.extraPayment}
                                         </label>
                                         <div className="relative">
                                             <IndianRupee className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -371,7 +411,7 @@ export default function EMIAnalysisPage() {
                                     className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
                                     disabled={loading}
                                 >
-                                    {loading ? "Analyzing..." : "Analyze Loan"}
+                                    {loading ? "Analyzing..." : translations.calculate}
                                 </Button>
                             </form>
                             
@@ -380,7 +420,7 @@ export default function EMIAnalysisPage() {
                                 <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <Card>
                                         <CardHeader>
-                                            <CardTitle>Monthly EMI</CardTitle>
+                                            <CardTitle>{translations.monthlyEmi}</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-2xl font-bold">
@@ -396,7 +436,7 @@ export default function EMIAnalysisPage() {
                                     <Card>
                                         <CardHeader>
                                             <CardTitle>
-                                                Total Interest
+                                                {translations.totalInterest}
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent>
@@ -591,7 +631,7 @@ export default function EMIAnalysisPage() {
                                         Smart Payment Analysis
                                         <Button onClick={downloadPDF} variant="outline" className="gap-2">
                                             <Download className="h-4 w-4" />
-                                            Download Report
+                                            {translations.download}
                                         </Button>
                                     </CardTitle>
                                 </CardHeader>

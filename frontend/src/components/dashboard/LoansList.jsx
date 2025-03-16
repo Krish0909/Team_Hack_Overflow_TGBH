@@ -1,5 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLanguage } from '@/lib/languageContext';
+import { translateBatch } from '@/lib/translation';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -33,9 +35,70 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-export default function LoansList({ loans, onUpdate }) {
+const TABLE_TRANSLATIONS = {
+  'en-IN': {
+    yourLoans: 'Your Loans',
+    loanType: 'Loan Type',
+    amount: 'Amount',
+    emi: 'EMI',
+    dueDate: 'Due Date',
+    status: 'Status',
+    progress: 'Progress',
+    actions: 'Actions',
+    completed: 'Completed',
+    deleteLoan: 'Delete Loan',
+    cancel: 'Cancel',
+    delete: 'Delete',
+    confirmDelete: 'Are you sure you want to delete this loan?',
+    deleteWarning: 'This action cannot be undone.'
+  },
+  'hi-IN': {
+    yourLoans: 'आपके लोन',
+    loanType: 'लोन प्रकार',
+    amount: 'राशि',
+    emi: 'ईएमआई',
+    dueDate: 'देय तिथि',
+    status: 'स्थिति',
+    progress: 'प्रगति',
+    actions: 'कार्रवाई',
+    completed: 'पूर्ण',
+    deleteLoan: 'लोन हटाएं',
+    cancel: 'रद्द करें',
+    delete: 'हटाएं',
+    confirmDelete: 'क्या आप वाकई इस लोन को हटाना चाहते हैं?',
+    deleteWarning: 'यह क्रिया वापस नहीं ली जा सकती.'
+  },
+  // Add other languages...
+};
+
+export default function LoansList({ loans, onUpdate, expanded }) {
+  const { language } = useLanguage();
+  const translations = TABLE_TRANSLATIONS[language] || TABLE_TRANSLATIONS['en-IN'];
+  const [translatedHeaders, setTranslatedHeaders] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState(null);
+
+  useEffect(() => {
+    const translateHeaders = async () => {
+      const headers = await translateBatch([
+        'Loan Type',
+        'Amount',
+        'EMI',
+        'Due Date',
+        'Status'
+      ], language);
+      
+      setTranslatedHeaders({
+        loanType: headers[0],
+        amount: headers[1],
+        emi: headers[2],
+        dueDate: headers[3],
+        status: headers[4]
+      });
+    };
+
+    translateHeaders();
+  }, [language]);
 
   const handleDelete = async () => {
     try {
@@ -89,19 +152,21 @@ export default function LoansList({ loans, onUpdate }) {
   return (
     <Card className="border-emerald-200/50">
       <CardHeader>
-        <CardTitle className="text-emerald-800 dark:text-emerald-200">Your Loans</CardTitle>
+        <CardTitle className="text-emerald-800 dark:text-emerald-200">
+          {translations.yourLoans}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-emerald-50/50 dark:hover:bg-emerald-950/50">
-              <TableHead>Loan Type</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>EMI</TableHead>
-              <TableHead>Next Due</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Progress</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{translations.loanType}</TableHead>
+              <TableHead>{translations.amount}</TableHead>
+              <TableHead>{translations.emi}</TableHead>
+              <TableHead>{translations.dueDate}</TableHead>
+              <TableHead>{translations.status}</TableHead>
+              <TableHead>{translations.progress}</TableHead>
+              <TableHead>{translations.actions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -115,7 +180,7 @@ export default function LoansList({ loans, onUpdate }) {
                 <TableCell>{formatCurrency(loan.emi_amount)}</TableCell>
                 <TableCell>
                   {loan.loan_status === 'completed' ? (
-                    <Badge variant="secondary">Completed</Badge>
+                    <Badge variant="secondary">{translations.completed}</Badge>
                   ) : (
                     format(getNextDueDate(loan), 'dd MMM yyyy')
                   )}
@@ -150,7 +215,7 @@ export default function LoansList({ loans, onUpdate }) {
                         }}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Loan
+                        {translations.deleteLoan}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -164,24 +229,25 @@ export default function LoansList({ loans, onUpdate }) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Loan</AlertDialogTitle>
+            <AlertDialogTitle>{translations.deleteLoan}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this loan? This action cannot be undone.
+              {translations.confirmDelete}
+              {translations.deleteWarning}
               {selectedLoan && (
                 <div className="mt-2 p-2 bg-muted rounded-md">
-                  <p><strong>Loan Type:</strong> {selectedLoan.loan_type}</p>
-                  <p><strong>Amount:</strong> {formatCurrency(selectedLoan.loan_amount)}</p>
+                  <p><strong>{translations.loanType}:</strong> {selectedLoan.loan_type}</p>
+                  <p><strong>{translations.amount}:</strong> {formatCurrency(selectedLoan.loan_amount)}</p>
                 </div>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{translations.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete
+              {translations.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
