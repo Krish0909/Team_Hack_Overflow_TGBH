@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X, Mic, MicOff, Send, Pause, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/languageContext";
+import { useUser } from "@clerk/nextjs";
 
 const VOICE_FALLBACKS = {
     "hi-IN": ["hi-IN", "en-IN"],
@@ -95,6 +96,7 @@ export default function FloatingAssistant() {
     const messagesEndRef = useRef(null);
     const router = useRouter();
     const { t, language } = useLanguage();
+    const { user } = useUser();
     const [recording, setRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
@@ -446,6 +448,7 @@ export default function FloatingAssistant() {
                 body: JSON.stringify({
                     message: text,
                     language,
+                    clerk_id: user?.id, // Add clerk_id to request
                     currentPath
                 })
             });

@@ -4,10 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Upload, Send, Image as ImageIcon, FileText, RefreshCw, X } from 'lucide-react';
 import { useLanguage } from '@/lib/languageContext';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { processChatResponse } from '@/lib/chatResponseProcessor';
 import { useRouter } from 'next/navigation';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function LoanBuddyPage() {
   const router = useRouter();
@@ -47,6 +51,22 @@ export default function LoanBuddyPage() {
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file type
+      const validTypes = [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/jpeg',
+        'image/jpg',
+        'image/png'
+      ];
+      
+      if (!validTypes.includes(file.type)) {
+        toast.error('Unsupported file type. Please upload PDF, DOCX, TXT, or images (JPG, PNG).');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+      
       setSelectedFile(file);
       setShowPromptInput(true);
       setFileUploadPrompt(`Please analyze this ${file.type.includes('image') ? 'image' : 'document'}`);
@@ -67,52 +87,55 @@ export default function LoanBuddyPage() {
 
     setUploading(true);
     const formData = new FormData();
-    const isImage = selectedFile.type.startsWith('image/');
-    
-    formData.append(isImage ? 'image' : 'file', selectedFile);
+    formData.append('file', selectedFile);
     formData.append('language', language);
     formData.append('message', fileUploadPrompt);
 
     try {
-      const endpoint = isImage ? '/chat/image' : '/chat/document';
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
-
-      const data = await response.json();
-      if (data.success) {
-        // Store document/image content for future reference
-        setCurrentDocument({
-          type: isImage ? 'image' : 'document',
-          content: data.data.text || data.data,
-          name: selectedFile.name
+        const response = await fetch('http://localhost:5000/loanbuddy/document', {
+            method: 'POST',
+            body: formData
         });
 
-        // Add file upload message with prompt
-        setMessages(prev => [...prev, {
-          type: 'user',
-          content: `${selectedFile.name}\nPrompt: ${fileUploadPrompt}`,
-          isFile: true,
-          fileType: isImage ? 'image' : 'document'
-        }]);
+        const data = await response.json();
+        if (data.success) {
+            setCurrentDocument({
+                type: 'document',
+                content: data.data.text,
+                name: selectedFile.name
+            });
 
-        // Process initial analysis
-        await processWithLLM(fileUploadPrompt, data.data.text || data.data);
-      }
+            // Add document analysis message
+            setMessages(prev => [
+                ...prev,
+                {
+                    type: 'user',
+                    content: `Analyzing: ${selectedFile.name}`,
+                    isFile: true
+                },
+                {
+                    type: 'assistant',
+                    isDocumentAnalysis: true,
+                    analysis: data.data.text,
+                    key_info: data.data.key_info,
+                    suggestions: [
+                        'Calculate EMI for this loan',
+                        'Check eligibility criteria',
+                        'Compare with other loans'
+                    ]
+                }
+            ]);
+        }
     } catch (error) {
-      console.error('Error:', error);
-      toast.error(error.message);
+        toast.error('Error processing document: ' + error.message);
     } finally {
-      setUploading(false);
-      setShowPromptInput(false);
-      setSelectedFile(null);
-      setFileUploadPrompt('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+        setUploading(false);
+        setShowPromptInput(false);
+        setSelectedFile(null);
+        setFileUploadPrompt('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  };
+};
 
   const processWithLLM = async (prompt, content) => {
     try {
@@ -151,97 +174,155 @@ export default function LoanBuddyPage() {
     setProcessing(true);
 
     try {
-      // If there's a current document, include its content in the context
-      const message = currentDocument 
-        ? `Regarding ${currentDocument.name}:\n${userMessage}\n\nDocument content: ${currentDocument.content}`
-        : userMessage;
-
-      const response = await fetch('http://localhost:5000/chat', {
+      const response = await fetch('http://localhost:5000/loanbuddy/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, language })
+        body: JSON.stringify({ message: userMessage, language })
       });
 
       const data = await response.json();
       if (data.success) {
-        const processedResponse = processChatResponse(data.data);
-        
-        // Add the assistant's response
+        // Add assistant response directly
         setMessages(prev => [...prev, {
           type: 'assistant',
-          content: processedResponse.response,
-          suggestions: processedResponse.suggestions
+          content: data.data.response,
+          suggestions: data.data.suggestions || []
         }]);
-
-        // Handle navigation if needed
-        if (processedResponse.action === 'navigate' && processedResponse.path) {
-          // Add navigation message
-          setMessages(prev => [...prev, {
-            type: 'assistant',
-            content: `I'll take you to ${processedResponse.path} for better assistance.`,
-            isNavigation: true
-          }]);
-
-          // Navigate after a short delay
-          setTimeout(() => {
-            router.push(processedResponse.path);
-          }, 2000);
-        }
       } else {
         throw new Error(data.error);
       }
     } catch (error) {
       toast.error('Error: ' + error.message);
+      setMessages(prev => [...prev, {
+        type: 'error',
+        content: 'Sorry, I encountered an error. Please try again.'
+      }]);
     } finally {
       setProcessing(false);
     }
   };
 
-  return (
-    <div className="container max-w-4xl mx-auto p-4 space-y-4">
-      {/* Updated Header Card */}
-      <div className="relative overflow-hidden rounded-lg border bg-card p-4 mb-4">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" />
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-          AI Loan Assistant
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Your intelligent companion for loan analysis and document understanding
-        </p>
-      </div>
+  const DocumentAnalysis = ({ analysis, keyInfo, suggestions }) => {
+    return (
+      <Card className="w-full mb-4 border-emerald-200/50 max-w-3xl mx-auto">
+        <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-emerald-600" />
+            <CardTitle className="text-lg font-medium">Document Analysis</CardTitle>
+          </div>
+          <CardDescription>Comprehensive analysis and recommendations</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 p-4">
+          {/* Key Information */}
+          {keyInfo && Object.keys(keyInfo).length > 0 && (
+            <div className="grid grid-cols-2 gap-3 p-3 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg">
+              {Object.entries(keyInfo).map(([key, value]) => (
+                value && (
+                  <div key={key} className="p-2 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                    <p className="text-xs text-muted-foreground capitalize font-medium">{key.replace(/_/g, ' ')}</p>
+                    <p className="font-semibold text-emerald-600 dark:text-emerald-400">{value}</p>
+                  </div>
+                )
+              ))}
+            </div>
+          )}
 
-      <Card className="h-[calc(100vh-12rem)] flex flex-col bg-card border-emerald-200/50">
+          {/* Document Content with Markdown */}
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis}</ReactMarkdown>
+          </div>
+
+          {/* Suggestions */}
+          {suggestions?.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => setInputText(suggestion)}
+                  className="flex items-center gap-2 p-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors text-left"
+                >
+                  <Info className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{suggestion}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderMessage = (msg, index) => {
+    if (msg.type === 'assistant' && msg.isDocumentAnalysis) {
+      return <DocumentAnalysis {...msg} />;
+    }
+    
+    return (
+      <div className={`max-w-md rounded-lg p-3 ${
+        msg.type === 'user' 
+          ? 'bg-primary text-primary-foreground ml-auto'
+          : msg.type === 'error'
+          ? 'bg-destructive text-destructive-foreground'
+          : 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20'
+      }`}>
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+        </div>
+        {msg.suggestions && msg.suggestions.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {msg.suggestions.map((suggestion, i) => (
+              <button
+                key={i}
+                onClick={() => setInputText(suggestion)}
+                className="text-xs px-2 py-1 rounded-full bg-background/10 hover:bg-background/20 transition-colors"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="h-[calc(100vh-1rem)] flex flex-col max-w-4xl mx-auto">
+      <Card className="flex-1 flex flex-col bg-gradient-to-b from-background to-muted/20 border-none rounded-lg">
         {/* Chat Header */}
         <div className="p-4 border-b flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30">
           <Bot className="h-5 w-5 text-emerald-600" />
           <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-200">LoanBuddy Assistant</h2>
         </div>
 
-        {/* Current Document Indicator - Updated styling */}
+        {/* Document Indicator */}
         {currentDocument && (
-          <div className="px-4 py-2 bg-emerald-50/50 dark:bg-emerald-900/20 border-b flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="px-6 py-3 bg-emerald-50/80 dark:bg-emerald-900/20 border-b flex items-center justify-between">
+            <div className="flex items-center gap-3">
               {currentDocument.type === 'image' ? (
-                <ImageIcon className="h-4 w-4" />
+                <ImageIcon className="h-5 w-5 text-emerald-600" />
               ) : (
-                <FileText className="h-4 w-4" />
+                <FileText className="h-5 w-5 text-emerald-600" />
               )}
-              <span className="text-sm">Analyzing: {currentDocument.name}</span>
+              <div>
+                <p className="font-medium text-sm">{currentDocument.name}</p>
+                <p className="text-xs text-muted-foreground">Active document for analysis</p>
+              </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setCurrentDocument(null)}
+              className="text-muted-foreground hover:text-foreground"
             >
               Clear
             </Button>
           </div>
         )}
 
-        {/* Messages Area - Updated styling */}
+        {/* Messages Area */}
         <div 
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-white to-emerald-50/30 dark:from-gray-900 dark:to-emerald-900/10"
+          className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-h-[calc(100vh-12rem)]"
         >
           <AnimatePresence>
             {messages.map((message, index) => (
@@ -252,43 +333,7 @@ export default function LoanBuddyPage() {
                 exit={{ opacity: 0 }}
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[80%] rounded-lg p-4 ${
-                  message.type === 'user' 
-                    ? 'bg-primary text-primary-foreground ml-auto' 
-                    : message.type === 'error'
-                    ? 'bg-destructive text-destructive-foreground'
-                    : message.isNavigation
-                    ? 'bg-accent text-accent-foreground'
-                    : 'bg-muted'
-                }`}>
-                  {message.isFile ? (
-                    <div className="flex items-center gap-2">
-                      {message.fileType === 'image' ? (
-                        <ImageIcon className="h-4 w-4" />
-                      ) : (
-                        <FileText className="h-4 w-4" />
-                      )}
-                      <span>{message.content}</span>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                      {message.suggestions && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {message.suggestions.map((suggestion, i) => (
-                            <button
-                              key={i}
-                              onClick={() => setInputText(suggestion)}
-                              className="text-xs px-2 py-1 rounded-full bg-background/10 hover:bg-background/20 transition-colors"
-                            >
-                              {suggestion}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                {renderMessage(message, index)}
               </motion.div>
             ))}
           </AnimatePresence>
@@ -300,7 +345,7 @@ export default function LoanBuddyPage() {
           )}
         </div>
 
-        {/* Input Area - Updated styling */}
+        {/* Input Area */}
         <form onSubmit={handleSubmit} className="p-4 border-t bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800/50 dark:to-gray-900/50">
           {showPromptInput ? (
             <div className="space-y-4">

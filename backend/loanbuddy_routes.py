@@ -54,6 +54,11 @@ def process_document(file_data, filename, language):
     try:
         temp_dir = get_temp_dir()
         _, ext = os.path.splitext(filename.lower())
+        
+        # Handle image files
+        if ext in ['.jpg', '.jpeg', '.png']:
+            return process_image(file_data)
+            
         temp_file = os.path.join(temp_dir, f"temp_doc{ext}")
 
         with open(temp_file, "wb") as f:
@@ -149,32 +154,34 @@ def process_image(file_data):
         # Save and process image
         temp_dir = get_temp_dir()
         temp_img = os.path.join(temp_dir, "temp_image.jpg")
-
+        
         image = Image.open(BytesIO(file_data))
-
+        
         # Resize if needed
         if max(image.size) > 1200:
             image.thumbnail((1200, 1200), Image.LANCZOS)
-
+        
         image.save(temp_img, optimize=True, quality=85)
-
+        
         # Get OCR instance
         ocr_instance = get_ocr()
-
+        
         # Run OCR
         result = ocr_instance.ocr(temp_img)
         text = ""
         if result and result[0]:
             text = "\n".join([line[1][0] for line in result[0] if len(line) > 1])
-
-        # Get base64 for vision model
-        with open(temp_img, "rb") as img_file:
-            img_base64 = base64.b64encode(img_file.read()).decode()
-
+        
+        # Clean up
         os.remove(temp_img)
         gc.collect()
-
-        return {"success": True, "text": text, "image_base64": img_base64}
+        
+        return {
+            "success": True,
+            "text": text[:10000] if len(text) > 10000 else text,
+            "truncated": len(text) > 10000,
+            "type": "image"
+        }
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -344,8 +351,10 @@ def process_translations(text_items, target_language, batch_size=15):
         for i in range(0, len(text_items), batch_size):
             batch = text_items[i:i+batch_size]
             try:
-                prompt = f"""Please analyze and translate these text segments to {target_language}.
-                Return the response in JSON format with the following structure:
+                prompt = f"""Create a JSON response with translations for the following text segments.
+                Target language: {target_language}
+
+                Return response in this exact JSON format:
                 {{
                     "translations": [
                         {{
@@ -363,36 +372,28 @@ def process_translations(text_items, target_language, batch_size=15):
                 
                 response = client.chat.completions.create(
                     messages=[
-                        {"role": "system", "content": "You are a translation assistant. Always respond in valid JSON format."},
-                        {"role": "user", "content": prompt}
+                        {"role": "system", "content": "You are a translation assistant. Generate JSON responses."},
+                        {"role": "user", "content": f"Create JSON translation for: {prompt}"}
                     ],
                     model="mixtral-8x7b-32768",
                     temperature=0.3,
-                    max_tokens=2000,
-                    response_format={"type": "json_object"}
+                    max_tokens=2000
                 )
                 
                 result = json.loads(response.choices[0].message.content)
                 if "translations" in result:
                     results.extend(result["translations"])
-                else:
-                    logger.warning(f"Missing translations in batch {i//batch_size + 1}")
-                    
+                
             except Exception as e:
-                logger.error(f"Error processing batch {i//batch_size + 1}: {e}")
+                logger.error(f"Translation batch error: {e}")
                 continue
                 
-        if not results:
-            logger.warning("No translations were generated")
-            # Return a basic structure to prevent frontend errors
-            results = [{
-                "original": "Error processing translations",
-                "purpose": "Error notification",
-                "translated_text": "त्रुटि: अनुवाद प्रोसेसिंग में समस्या" if target_language == "Hindi" else "Error in translation processing",
-                "instructions": "कृपया पुनः प्रयास करें" if target_language == "Hindi" else "Please try again"
-            }]
-            
-        return results
+        return results or [{
+            "original": "Translation error",
+            "translated_text": "Error processing translation",
+            "purpose": "Error notification",
+            "instructions": "Please try again"
+        }]
         
     except Exception as e:
         logger.error(f"Translation process failed: {e}")

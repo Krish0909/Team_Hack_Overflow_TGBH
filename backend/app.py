@@ -9,6 +9,13 @@ from loanbuddy_routes import loanbuddy
 from emi_calculator import emi_calculator
 import logging
 import sys
+from supabase import create_client, Client
+from loanbuddy_routes import (
+    process_document,
+    extract_key_info,
+    process_image,
+    get_ocr
+)
 
 # Configure logging
 logging.basicConfig(
@@ -23,6 +30,12 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+# Initialize Supabase
+supabase: Client = create_client(
+    os.environ.get("SUPABASE_URL"),
+    os.environ.get("SUPABASE_KEY")
+)
 
 # Register the loanbuddy blueprint with a URL prefix
 app.register_blueprint(loanbuddy, url_prefix="/chat")
@@ -237,6 +250,84 @@ def format_response(text, action="stay", path=None, suggestions=None, language="
     }
 
 
+def get_user_data(clerk_id):
+    """Fetch user data from Supabase"""
+    try:
+        # Fetch user profile
+        profile = supabase.table('user_profiles').select('*').eq('clerk_id', clerk_id).single().execute()
+        
+        # Fetch loans
+        loans = supabase.table('loans').select('*').eq('clerk_id', clerk_id).execute()
+        
+        # Fetch loan applications
+        applications = supabase.table('loan_applications').select('*').eq('clerk_id', clerk_id).execute()
+        
+        return {
+            'profile': profile.data,
+            'loans': loans.data,
+            'applications': applications.data
+        }
+    except Exception as e:
+        logger.error(f"Error fetching user data: {e}")
+        return None
+
+def get_floating_assistant_prompt(language_code, user_data=None):
+    """Get concise, personalized system prompt for floating assistant"""
+    language_name = LANGUAGES.get(language_code, "English")
+    
+    user_context = ""
+    if user_data and user_data.get('profile'):
+        profile = user_data['profile']
+        user_context = f"""
+        User Context:
+        - Monthly Income: {profile.get('monthly_income', 'Not provided')}
+        - Employment: {profile.get('employment_type', 'Not provided')}
+        - Credit Score: {profile.get('credit_score', 'Not provided')}
+        - Existing Loans: {len(user_data.get('loans', []))}
+        """
+
+    return f"""You are a concise financial assistant. Keep responses under 50 words.
+    {user_context}
+    
+    Rules:
+    1. Respond in {language_name}
+    2. Be direct and brief
+    3. Personalize based on user context
+    4. Focus on immediate actions
+    5. Use conversational tone
+    
+    Response format:
+    {{
+        "action": "stay/navigate",
+        "response": "brief response",
+        "suggestions": ["1-2 relevant suggestions"],
+        "detected_language": "{language_code}"
+    }}
+    """
+
+def get_loanbuddy_system_prompt(language_code):
+    """Get detailed system prompt for document analysis"""
+    language_name = LANGUAGES.get(language_code, "English")
+    
+    return f"""You are an expert loan document analyzer. Provide detailed analysis.
+    
+    Focus on:
+    1. Document verification
+    2. Term analysis
+    3. Risk assessment
+    4. Compliance check
+    5. User-friendly explanations
+    
+    Response format:
+    {{
+        "response": "detailed analysis",
+        "key_points": ["extracted key information"],
+        "concerns": ["potential issues"],
+        "suggestions": ["next steps"],
+        "language": "{language_code}"
+    }}
+    """
+
 def get_loanbuddy_system_prompt(language_code):
     """Get the LoanBuddy system prompt."""
     # Map language code to language name
@@ -284,10 +375,8 @@ def get_default_suggestions():
         "View loan options"
     ]
 
-def process_with_ai(message, language):
+def process_with_ai(message, language, system_prompt):
     """Process message with AI when no specific intent is matched"""
-    system_prompt = get_loanbuddy_system_prompt(language)
-
     try:
         chat_completion = client.chat.completions.create(
             messages=[
@@ -329,6 +418,10 @@ def chat():
         data = request.json
         message = data.get("message", "")
         language = data.get("language", "en-IN")
+        clerk_id = data.get("clerk_id")
+        
+        # Get user data for personalization
+        user_data = get_user_data(clerk_id) if clerk_id else None
         
         # First check for intent
         intent = detect_intent(message)
@@ -357,8 +450,10 @@ def chat():
                     ),
                 })
         
-        # For non-navigation intents, process with AI
-        ai_response = process_with_ai(message, language)
+        # For non-navigation intents, process with AI using personalized prompt
+        system_prompt = get_floating_assistant_prompt(language, user_data)
+        ai_response = process_with_ai(message, language, system_prompt)
+        
         return jsonify({"success": True, "data": json.dumps(ai_response)})
         
     except Exception as e:
@@ -384,6 +479,100 @@ def internal_error(error):
         500,
     )
 
+@app.route("/loanbuddy/chat", methods=["POST"])
+def loanbuddy_chat():
+    """Handle LoanBuddy chat requests"""
+    try:
+        data = request.json
+        message = data.get("message", "")
+        language = data.get("language", "en-IN")
+        
+        # Get response from LLM
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are LoanBuddy, a friendly loan assistant. Respond in {LANGUAGES[language]}. Keep responses clear and helpful."
+                },
+                {"role": "user", "content": message}
+            ],
+            model="llama-3.2-90b-vision-preview",
+            temperature=0.7,
+            max_tokens=500
+        )
+        
+        # Get suggestions based on context
+        suggestions = get_default_suggestions()
+        if "loan" in message.lower():
+            suggestions = [
+                "What documents do I need?",
+                "Check my eligibility",
+                "Calculate EMI"
+            ]
+        elif "emi" in message.lower():
+            suggestions = [
+                "Calculate another EMI",
+                "Compare loan options",
+                "View repayment schedule"
+            ]
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "response": chat_completion.choices[0].message.content,
+                "suggestions": suggestions
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"LoanBuddy chat error: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        })
+
+@app.route("/loanbuddy/document", methods=["POST"])
+def loanbuddy_document():
+    """Handle document analysis for LoanBuddy"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"success": False, "error": "No file provided"}), 400
+        
+        file = request.files['file']
+        language = request.form.get('language', 'en-IN')
+        file_data = file.read()
+        
+        # Process document
+        result = process_document(file_data, file.filename, language)
+        
+        if not result["success"]:
+            return jsonify(result), 500
+            
+        # Extract key information
+        text = result["text"]
+        key_info = extract_key_info(text)
+        
+        # Clean up and format response
+        response_data = {
+            "success": True,
+            "data": {
+                "text": text,
+                "key_info": key_info,
+                "truncated": result.get("truncated", False),
+                "summary": {
+                    "document_type": key_info.get("type", "Unknown"),
+                    "total_amount": key_info.get("loan_amount", "Not specified"),
+                    "interest_rate": key_info.get("interest_rate", "Not specified"),
+                    "tenure": key_info.get("tenure", "Not specified")
+                }
+            }
+        }
+        
+        return jsonify(response_data)
+            
+    except Exception as e:
+        logger.error(f"Document analysis error: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
