@@ -50,6 +50,10 @@ const PROJECT_FEATURES = {
         path: "/dashboard/loanguard",
         description: "Analyze and understand loan documents",
     },
+    loan_form_guidance: {
+        path: "/dashboard/docScan",
+        description: "Scan and analyze loan documents and help to fill the documents",
+    },
     emi_analysis: {
         path: "/dashboard/emiAnalysis",
         description: "Calculate EMI and loan payments",
@@ -57,6 +61,10 @@ const PROJECT_FEATURES = {
     loan_threats: {
         path: "/dashboard/loanguard",
         description: "Analyze loan documents (terms and conditions) and get insights",
+    },
+    news_feed: {
+        path: "/dashboard/news",
+        description: " View and get the latest news",
     },
     support: {
         path: "/support",
