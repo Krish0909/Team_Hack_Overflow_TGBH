@@ -1,15 +1,14 @@
-![image](https://github.com/user-attachments/assets/0cd6c2ef-4a21-4cb4-9634-44e75dd7e8b9)
 # LoanSaathi - AI-powered Smart Loan Assistant
+<img src="https://github.com/user-attachments/assets/a626b2b7-c2b6-4206-923c-e7c6c4e113ec" width="400"/>
 
 ## Turning Complexity Into Clarity
-
+## Please find the demo Video Here : https://drive.google.com/drive/folders/1fRnyMOD7-_HOcwWVS5wMVYlkc_NGO0Mr?usp=drive_link
 ## 🚀 TLDR
 A multimodal AI-powered assistant that speaks your language, understands your needs, and simplifies every step of the loan journey - from eligibility checks to EMI reminders.
 
 ---
 ## 🏆 The Great Bengaluru Hackathon  Details
 - **Event:** The Great Indian Hackathon
-- **Track:** Multilingual Conversational Loan Advisor
 - **Team Name:** Hack_Overflow
 - **Team Code:** S-8
 - **Team Members:**
@@ -17,6 +16,10 @@ A multimodal AI-powered assistant that speaks your language, understands your ne
   - Ayush Bohra
   - Naman Anand
   - Yash Varma
+<img src="https://github.com/user-attachments/assets/85b97863-b431-4661-95b1-4894b1254e5b" width="400"/>
+
+- **Track:**  
+<img src="https://github.com/user-attachments/assets/f63ecb45-e4e8-4b08-bf75-6dc4fe627e69" width="400"/>
 
 ---
 
@@ -36,10 +39,17 @@ A multimodal AI-powered assistant that speaks your language, understands your ne
 ## ⚙️ Core Features
 ### 🛠 Technical Innovation
 - **Advanced AI Stack:**
+  - Sarvam Translate Text, Sarvam Parse, Doc Translate, Speech to Text, Speech To Text Translate, Call Analytics, Text to Speech
   - Mistral Saba (24B) + FinLLaMa (Fine-tuned LLM)
   - Agentic Document Extraction & AI-powered parsing
+- **Whatsapp Chatbot:**
+  - Whatsapp Integration using Twilio
+  - <img src="https://github.com/user-attachments/assets/c7330de3-f541-4483-a143-95c11c22f4f7" width="400"/>
+- **Loan Shark Detection:**
+  - Helps users prevent loan sharks from making them sign illicit documents
+  - <img src="https://github.com/user-attachments/assets/61d79bff-1d29-4329-94a8-02eb67f3ae55" width="400"/>
 - **Performance Metrics:**
-  - Supports 8 Indian languages with dialect-specific tuning
+  - Supports 10 Indian languages with dialect-specific tuning
   - Zero-document retention policy for enhanced privacy
 - **Personalization:**
   - Supabase for user data storage & personalized experience
@@ -75,11 +85,13 @@ A multimodal AI-powered assistant that speaks your language, understands your ne
 ---
 
 ## 💡 Future Scope
-- Expansion to more Indian languages & dialects.
+- Expansion to more Indian languages & dialects. Currently, it supports 10 languages.
+  <img src="https://github.com/user-attachments/assets/3442cdac-5477-45d8-be3c-ad71248a41f1" width="400"/>
 - AI-powered risk assessment for better loan recommendations.
 - Collaboration with financial institutions for seamless integration.
 
 ---
+<img src="https://github.com/user-attachments/assets/567cd91d-965c-4abf-bb9b-a863845eacda" width="400"/>
 
 ## 🎉 Thank You!
 Developed with ❤️ by **Hack_Overflow**
