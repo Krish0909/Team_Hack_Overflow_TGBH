@@ -16,6 +16,7 @@ from loanbuddy_routes import (
     process_image,
     get_ocr
 )
+from loanguard import loanguard
 
 # Configure logging
 logging.basicConfig(
@@ -42,6 +43,9 @@ app.register_blueprint(loanbuddy, url_prefix="/chat")
 
 # Register the EMI calculator blueprint
 app.register_blueprint(emi_calculator, url_prefix="/api/emi")
+
+# Register the loanguard blueprint
+app.register_blueprint(loanguard, url_prefix='/loanguard')
 
 # Restrict to only the four main dashboard routes
 DASHBOARD_ROUTES = {

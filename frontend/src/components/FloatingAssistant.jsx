@@ -50,9 +50,13 @@ const PROJECT_FEATURES = {
         path: "/dashboard/loanguard",
         description: "Analyze and understand loan documents",
     },
-    emi_calculator: {
+    emi_analysis: {
         path: "/dashboard/emiAnalysis",
         description: "Calculate EMI and loan payments",
+    },
+    loan_threats: {
+        path: "/dashboard/loanguard",
+        description: "Analyze loan documents (terms and conditions) and get insights",
     },
     support: {
         path: "/support",

@@ -22,6 +22,7 @@ import {
     Newspaper,
     Shield,
     ShieldAlert,
+    Scan,
 } from "lucide-react";
 import Link from "next/link";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -69,6 +70,16 @@ export default function DashboardLayout({ children }) {
         {
             title: {
                 'en-IN': 'Scan Documents',
+                'hi-IN': 'दस्तावेज़ स्कैन करें',
+                // Add other languages...
+            },
+            href: "/dashboard/docScan",
+            icon: Scan,
+            color: "text-yellow-500",
+        },
+        {
+            title: {
+                'en-IN': 'Loan Threats',
                 'hi-IN': 'दस्तावेज़ स्कैन करें',
                 // Add other languages...
             },
